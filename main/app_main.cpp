@@ -7,6 +7,7 @@
 extern "C" void app_main(void) {
     Coil coil(2);
     SimpleInput simpleInput(13);
+
     while(1){
         coil.toggle();
         printf("current input 13 state: %d\n", simpleInput.isActive());
