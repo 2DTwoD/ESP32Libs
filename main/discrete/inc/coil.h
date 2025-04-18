@@ -5,7 +5,7 @@
 #include "hal/gpio_types.h"
 
 #include "i_switch.h"
-#include "programm_coil.h"
+#include "program_coil.h"
 
 class Coil: public ProgrammCoil{
 	private:

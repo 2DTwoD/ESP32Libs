@@ -1,4 +1,4 @@
-#include "programm_coil.h"
+#include "program_coil.h"
 
 bool ProgrammCoil::isActive(){
     return out;
