@@ -1,7 +1,7 @@
 #include "off_delay.h"
 
 //OffDelayCommon
-OffDelayCommon::OffDelayCommon(uint32_t period): CommonTimer(period){
+OffDelayCommon::OffDelayCommon(uint32_t period): ITimer(period){
 }
 void OffDelayCommon::update(){
 	if(CommonTimer::finished()){
@@ -19,18 +19,14 @@ void OffDelayCommon::set(bool value){
 	}
 	startFlag = value;
 }
-void OffDelayCommon::pause(bool value) {
+bool OffDelayCommon::get(){
+    return startFlag || CommonTimer::inWork();
+}
+void OffDelayCommon::wait(bool value) {
     CommonTimer::setPause(value);
 }
-bool OffDelayCommon::get(){
-	return startFlag || CommonTimer::inWork();
-}
-void OffDelayCommon::reset(){
+void OffDelayCommon::again(){
 	CommonTimer::finish();
-}
-
-void OffDelayCommon::again() {
-    CommonTimer::prepareAndStart();
 }
 
 

@@ -2,24 +2,6 @@
 #define COMMON_TIMER_H
 #include <cstdint>
 
-class ITimer {
-public:
-    virtual void update() = 0;
-    virtual void set(bool value) = 0;
-    virtual void pause(bool value) = 0;
-    virtual bool get() = 0;
-    virtual void reset() = 0;
-    virtual void again() = 0;
-    ITimer& operator=(bool value) {
-        set(value);
-        return *this;
-    }
-    ITimer& operator+=(bool value) {
-        pause(value);
-        return *this;
-    };
-};
-
 class CommonTimer {
 	private:
 		uint32_t period;
@@ -28,7 +10,7 @@ class CommonTimer {
 		bool impulse{false};
 	public:
 		explicit CommonTimer(uint32_t period);
-		void update();
+        virtual void update();
 		uint32_t getPeriod() const;
 		void setPeriod(uint32_t value);
 		uint32_t getCurrentTime() const;
@@ -41,8 +23,8 @@ class CommonTimer {
 		void finish();
 		void setStart(bool value);
 		void setPause(bool value);
-		CommonTimer& operator=(bool value);
-		CommonTimer& operator+=(bool value);
+        virtual CommonTimer& operator=(bool value);
+        virtual CommonTimer& operator+=(bool value);
 		virtual bool started();
 	    bool notStarted() const;
 		bool finished() const;
@@ -50,6 +32,30 @@ class CommonTimer {
 		bool finishedImpulse();
 		bool inWork();
 		bool isFree() const;
+		bool inPause() const;
 };
 
+
+class ITimer: protected CommonTimer {
+public:
+    explicit ITimer(uint32_t period) : CommonTimer(period) {}
+    virtual void set(bool value) = 0;
+    virtual bool get() = 0;
+    virtual void wait(bool value) = 0;
+    virtual void again() = 0;
+    virtual uint32_t time(){
+        return CommonTimer::getCurrentTime();
+    }
+    virtual uint32_t remain(){
+        return CommonTimer::getPeriod() - time();
+    }
+    ITimer& operator=(bool value) override{
+        set(value);
+        return *this;
+    }
+    ITimer& operator+=(bool value) override {
+        wait(value);
+        return *this;
+    };
+};
 #endif //COMMON_TIMER_H

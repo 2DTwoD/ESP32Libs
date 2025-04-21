@@ -4,6 +4,7 @@ idf_component_register(
         "discrete/src/coil.cpp"
         "discrete/src/program_coil.cpp"
         "discrete/src/simple_input.cpp"
+        "discrete/src/simple_input_delayed.cpp"
         "misc/src/array_fun.cpp"
         "misc/src/math_fun.cpp"
         "timer/src/common_timer.cpp"

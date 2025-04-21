@@ -1,7 +1,7 @@
 #include "on_delay.h"
 
 //OnDelayCommon
-OnDelayCommon::OnDelayCommon(uint32_t period): CommonTimer(period){
+OnDelayCommon::OnDelayCommon(uint32_t period): ITimer(period){
 }
 void OnDelayCommon::update(){
 	CommonTimer::update();
@@ -9,18 +9,14 @@ void OnDelayCommon::update(){
 void OnDelayCommon::set(bool value){
 	CommonTimer::setStart(value);
 }
-void OnDelayCommon::pause(bool value){
-	CommonTimer::setPause(value);
-}
 bool OnDelayCommon::get(){
 	return CommonTimer::finished();
 }
-void OnDelayCommon::reset(){
-	CommonTimer::reset();
+void OnDelayCommon::wait(bool value){
+    CommonTimer::setPause(value);
 }
-
 void OnDelayCommon::again() {
-    CommonTimer::prepareAndStart();
+	CommonTimer::reset();
 }
 
 //OnDelay

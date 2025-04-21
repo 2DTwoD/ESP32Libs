@@ -5,17 +5,16 @@
 #include "common_timer.h"
 #include "updater.h"
 
-class PulseCommon: private CommonTimer, public ITimer{
+class PulseCommon: public ITimer{
 	private:
 		bool startFlag{false};
+		bool waitFlag{false};
 	public:
-        using CommonTimer::getCurrentTime;
 		explicit PulseCommon(uint32_t period);
 		void update() override;
 		void set(bool value) override;
-		void pause(bool value) override;
+		void wait(bool value) override;
 		bool get() override;
-		void reset() override;
         void again() override;
 };
 
@@ -23,6 +22,8 @@ class Pulse: public PulseCommon, public IUpdated1ms {
 	public:
 		explicit Pulse(uint32_t period);
 		void update1ms() override;
+        using ITimer::operator=;
+        using ITimer::operator+=;
 };
 
 class PulseInterrapt: public PulseCommon, public IUpdated1ms {
@@ -30,6 +31,8 @@ class PulseInterrapt: public PulseCommon, public IUpdated1ms {
 		explicit PulseInterrapt(uint32_t period);
 		void update1ms() override;
 		void set(bool value) override;
+        using ITimer::operator=;
+        using ITimer::operator+=;
 };
 
 #endif //PULSE_H

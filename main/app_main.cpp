@@ -6,25 +6,20 @@
 #include "simple_input.h"
 #include "on_delay.h"
 #include "pulse.h"
+#include "off_delay.h"
+#include "simple_input_delayed.h"
 
 extern "C" void app_main(void) {
     Coil coil(2);
-    SimpleInput simpleInput(13);
-    OnDelay delay(1000);
-    Pulse pulse(500);
+    SimpleInputDelayed simpleInput(13, 1000);
+    OnDelay on(1000);
+    OffDelay off(1000);
+    Pulse pulse(2000);
+    PulseInterrapt pulseI(2000);
     while(1){
-        delay.set(true);
-        pulse.set(true);
-        if(delay.get()) {
-            delay.reset();
-//            ESP_LOGI("Delay", "expire");
-        }
-        if(!pulse.get()){
-            pulse.reset();
-            coil.toggle();
-            ESP_LOGI("Pulse", "expire");
-        }
-        ESP_LOGI("Pulse", "currentTime %lu", pulse.getCurrentTime());
+        pulse = simpleInput.isActive();
+        coil = pulse.get();
+        printf("time: %lu\n", pulse.remain());
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }

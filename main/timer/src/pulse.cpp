@@ -1,7 +1,7 @@
 #include "pulse.h"
 
 //PulseCommon
-PulseCommon::PulseCommon(uint32_t period): CommonTimer(period){
+PulseCommon::PulseCommon(uint32_t period): ITimer(period){
 }
 void PulseCommon::update(){
 	if(CommonTimer::finished()){
@@ -17,23 +17,23 @@ void PulseCommon::set(bool value){
 		}
 	} else {
 		if(CommonTimer::isFree()){
+            waitFlag = false;
 			startFlag = false;
 		}
 	}
 }
-void PulseCommon::pause(bool value) {
+void PulseCommon::wait(bool value) {
+    waitFlag = value;
     CommonTimer::setPause(value);
 }
 bool PulseCommon::get(){
-	return CommonTimer::inWork() || (CommonTimer::notFinished() && startFlag);
-}
-void PulseCommon::reset(){
-	startFlag = false;
-	CommonTimer::stop();
+	return CommonTimer::inWork() || waitFlag;
 }
 
 void PulseCommon::again() {
-    CommonTimer::prepareAndStart();
+    startFlag = false;
+    waitFlag = false;
+    CommonTimer::stop();
 }
 
 //Pulse
@@ -54,6 +54,6 @@ void PulseInterrapt::update1ms(){
 void PulseInterrapt::set(bool value){
 	PulseCommon::set(value);
 	if(!value) {
-		PulseCommon::reset();
+		PulseCommon::again();
 	}
 }

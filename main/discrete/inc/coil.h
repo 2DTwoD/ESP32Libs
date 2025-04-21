@@ -19,6 +19,8 @@ class Coil: public ProgrammCoil{
     bool isActive() override;
 
     void setValue(bool value) override;
+
+    using ProgrammCoil::operator=;
 };
 
 #endif //COIL_H
