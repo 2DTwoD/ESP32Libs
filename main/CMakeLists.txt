@@ -1,6 +1,7 @@
 idf_component_register(
         SRCS
         "app_main.cpp"
+        "comm/src/i2c_driver.cpp"
         "discrete/src/coil.cpp"
         "discrete/src/program_coil.cpp"
         "discrete/src/simple_input.cpp"
@@ -16,6 +17,7 @@ idf_component_register(
         PRIV_REQUIRES spi_flash
 
         INCLUDE_DIRS
+        "comm/inc"
         "discrete/inc"
         "misc/inc"
         "timer/inc"
