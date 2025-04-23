@@ -13,7 +13,7 @@ enum CommStatus{
 template <typename T>
 class ICommDriver{
 public:
-    virtual CommStatus init(T commPars) = 0;
+    virtual CommStatus init(T* commPars) = 0;
     virtual CommStatus read(uint8_t* bytes, uint16_t len) = 0;
     virtual CommStatus write(uint8_t *const bytes, uint16_t len) = 0;
 };

@@ -8,19 +8,18 @@
 #include "pulse.h"
 #include "off_delay.h"
 #include "simple_input_delayed.h"
+#include "task_common.h"
 
 
 extern "C" void app_main(void) {
     Coil coil(2);
     SimpleInputDelayed simpleInput(13, 1000);
-    OnDelay on(1000);
-    OffDelay off(1000);
     Pulse pulse(2000);
-    PulseInterrapt pulseI(2000);
+    xTaskCreate(testTask, "testTask", configMINIMAL_STACK_SIZE * 20, nullptr,
+                tskIDLE_PRIORITY + 1, nullptr);
     while(1){
         pulse = simpleInput.isActive();
         coil = pulse.get();
-        printf("time: %lu\n", pulse.remain());
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
