@@ -92,10 +92,14 @@ uint16_t I2CDriver::getSlaveIndex() const {
 }
 
 I2CDriver::~I2CDriver() {
-    i2c_del_master_bus(*bus_handle);
-    delete bus_handle;
-    slaves->forEach([](auto handle){
-        delete handle;
-    });
-    delete slaves;
+    if(bus_handle != nullptr){
+        i2c_del_master_bus(*bus_handle);
+        delete bus_handle;
+    }
+    if(slaves != nullptr){
+        slaves->forEach([](auto handle){
+            delete handle;
+        });
+        delete slaves;
+    }
 }

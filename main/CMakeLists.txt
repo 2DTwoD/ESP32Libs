@@ -2,6 +2,7 @@ idf_component_register(
         SRCS
         "app_main.cpp"
         "comm/src/i2c_driver.cpp"
+        "comm/src/wifi_ap_tcp_server.cpp"
         "discrete/src/coil.cpp"
         "discrete/src/program_coil.cpp"
         "discrete/src/simple_input.cpp"

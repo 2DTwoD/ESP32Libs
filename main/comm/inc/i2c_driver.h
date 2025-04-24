@@ -8,15 +8,15 @@
 
 struct I2CParams{
     i2c_port_num_t port{I2C_NUM_0};
-    gpio_num_t sclPin{GPIO_NUM_0};
-    gpio_num_t sdaPin{GPIO_NUM_0};
-    bool pullUp{false};
+    gpio_num_t sclPin{GPIO_NUM_22};
+    gpio_num_t sdaPin{GPIO_NUM_21};
+    bool pullUp{true};
 };
 
 class I2CDriver: public ICommDriver<I2CParams>{
 private:
     i2c_master_bus_handle_t* bus_handle;
-    const char* errorTag = "I2C ERROR";
+    const char* errorTag = "I2CDriver ERROR";
     ArrayList<i2c_master_dev_handle_t*> *slaves{nullptr};
     int32_t timeout{-1};
     uint16_t slaveIndex{0};
