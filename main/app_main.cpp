@@ -13,7 +13,8 @@
 #include "wifi_ap_tcp_server.h"
 
 extern "C" void app_main(void) {
-    WiFiApTcpServer tcpServer("hiwifi", "12345678");
+    WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
+    tcpServer.start();
     Coil coil(2);
     SimpleInputDelayed simpleInput(13, 1000);
     Pulse pulse(2000);
