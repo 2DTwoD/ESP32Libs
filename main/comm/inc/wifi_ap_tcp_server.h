@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_mac.h"
@@ -31,15 +32,22 @@ private:
     IPv4addr apMask{};
     uint8_t maxConnections{10};
     inline static const char *TAG = "WiFiApTcpServer";
-    static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+    static void wifiEventhandler(void* arg, esp_event_base_t event_base,
                                    int32_t event_id, void* event_data);
-    static void tcp_server_task(void *pvParameters);
+    static void tcpServerTask(void *pvParameters);
 public:
     WiFiApTcpServer(const char* ssid, const char* password, uint16_t port,
                     IPv4addr apAddress = {192, 168, 10, 10},
                     IPv4addr apMask = {255, 255, 255, 0},
                     uint8_t maxConnections = 10);
     void start();
+    virtual void afterReceiveAction(int client_socket, uint8_t *receivedData, uint16_t len);
+};
+
+
+struct WiFiApTcpServerTaskParams{
+    uint16_t port{0};
+    WiFiApTcpServer* wiFiApTcpServer{nullptr};
 };
 
 #endif //WIFI_AP_TCP_SERVER_H

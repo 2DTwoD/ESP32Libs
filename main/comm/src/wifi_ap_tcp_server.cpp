@@ -3,13 +3,21 @@
 #include <dhcpserver/dhcpserver_options.h>
 #include "wifi_ap_tcp_server.h"
 
+
 WiFiApTcpServer::WiFiApTcpServer(const char *ssid, const char *password, uint16_t port,
                                  IPv4addr apAddress, IPv4addr apMask, uint8_t maxConnections)
                                  : ssid((char*) ssid), password((char*)password), port(port),
                                    apAddress(apAddress), apMask(apMask), maxConnections(maxConnections) {
+    //Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
 }
 
-void WiFiApTcpServer::wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+void WiFiApTcpServer::wifiEventhandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         auto event = (wifi_event_ap_staconnected_t*) event_data;
 
@@ -23,13 +31,6 @@ void WiFiApTcpServer::wifi_event_handler(void *arg, esp_event_base_t event_base,
 }
 
 void WiFiApTcpServer::start() {
-    //Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
     ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
     //Initialize WiFi
     ESP_ERROR_CHECK(esp_netif_init());
@@ -57,7 +58,7 @@ void WiFiApTcpServer::start() {
 
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
                                                         ESP_EVENT_ANY_ID,
-                                                        &wifi_event_handler,
+                                                        &wifiEventhandler,
                                                         nullptr,
                                                         nullptr));
 
@@ -71,20 +72,34 @@ void WiFiApTcpServer::start() {
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
+    ESP_LOGI(TAG, "wifi_init_softap finished.");
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "wifi_init_softap finished.");
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)&port, 5, nullptr);
+
+    WiFiApTcpServerTaskParams params;
+    params.port = port;
+    params.wiFiApTcpServer = this;
+
+    if(xTaskCreate(tcpServerTask,
+                   "tcp_server",
+                   4096,
+                   (void*)&params,
+                   5,
+                   nullptr) != pdPASS){
+        ESP_LOGI(TAG, "TCP server task not created");
+    }
+
 }
 
-void WiFiApTcpServer::tcp_server_task(void *pvParameters) {
+void WiFiApTcpServer::tcpServerTask(void *pvParameters) {
     char rx_buffer[128];	// char array to store received data
     int bytes_received;		// immediate bytes received
+    WiFiApTcpServerTaskParams taskParams = *(WiFiApTcpServerTaskParams*)pvParameters;
     while (1) {
         struct sockaddr_in destAddr;
         destAddr.sin_addr.s_addr = htonl(INADDR_ANY); //Change hostname to network byte order
         destAddr.sin_family = AF_INET;		//Define address family as Ipv4
-        destAddr.sin_port = htons(*(uint16_t*)pvParameters); 	//Define PORT
+        destAddr.sin_port = htons(taskParams.port); 	//Define PORT
 
         /* Create TCP socket*/
         int socket_id = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -129,21 +144,25 @@ void WiFiApTcpServer::tcp_server_task(void *pvParameters) {
                 if (bytes_received < 0) {
                     ESP_LOGI(TAG, "Waiting for data");
                     vTaskDelay(100 / portTICK_PERIOD_MS);
-                    // Connection closed
+                // Connection closed
                 } else if (bytes_received == 0) {
                     ESP_LOGI(TAG, "Connection closed");
                     break;
-                    // Data received
+                // Data received
                 } else {
                     rx_buffer[bytes_received] = 0; // Null-terminate whatever we received and treat like a string
                     ESP_LOGI(TAG, "%s", rx_buffer);
                     //Send back
-                    send(client_socket, rx_buffer, sizeof(rx_buffer) - 1, 0);
+                    taskParams.wiFiApTcpServer->afterReceiveAction(client_socket, (uint8_t *)rx_buffer, sizeof(rx_buffer));
                     // Clear rx_buffer, and fill with zero's
                     bzero(rx_buffer, sizeof(rx_buffer));
                 }
             }
         }
     }
-    vTaskDelete(NULL);
+    vTaskDelete(nullptr);
+}
+
+void WiFiApTcpServer::afterReceiveAction(int client_socket, uint8_t *receivedData, uint16_t len) {
+    send(client_socket, receivedData, len, 0);
 }
