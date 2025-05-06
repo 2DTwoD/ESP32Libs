@@ -41,6 +41,7 @@ public:
                     IPv4addr apMask = {255, 255, 255, 0},
                     uint8_t maxConnections = 10);
     void start();
+    void sendData(int client_socket, uint8_t *sendingData, uint16_t len);
     virtual void afterReceiveAction(int client_socket, uint8_t *receivedData, uint16_t len);
 };
 

@@ -12,5 +12,7 @@ include_directories(
         $ENV{IDF_PATH}/components/nvs_flash/include
         $ENV{IDF_PATH}/components/esp_netif/include
         $ENV{IDF_PATH}/components/esp_partition/include
+        $ENV{IDF_PATH}/components/esp_adc/include
+        $ENV{IDF_PATH}/components/esp_adc/esp32/include
 )
 project(ESP32Libs)

@@ -1,6 +1,6 @@
 #include <lwip/sockets.h>
 #include <dhcpserver/dhcpserver.h>
-#include <dhcpserver/dhcpserver_options.h>
+//#include <dhcpserver/dhcpserver_options.h>
 #include "wifi_ap_tcp_server.h"
 
 
@@ -152,7 +152,7 @@ void WiFiApTcpServer::tcpServerTask(void *pvParameters) {
                 } else {
                     rx_buffer[bytes_received] = 0; // Null-terminate whatever we received and treat like a string
                     ESP_LOGI(TAG, "%s", rx_buffer);
-                    //Send back
+                    //After receive action
                     taskParams.wiFiApTcpServer->afterReceiveAction(client_socket, (uint8_t *)rx_buffer, sizeof(rx_buffer));
                     // Clear rx_buffer, and fill with zero's
                     bzero(rx_buffer, sizeof(rx_buffer));
@@ -164,5 +164,9 @@ void WiFiApTcpServer::tcpServerTask(void *pvParameters) {
 }
 
 void WiFiApTcpServer::afterReceiveAction(int client_socket, uint8_t *receivedData, uint16_t len) {
-    send(client_socket, receivedData, len, 0);
+    sendData(client_socket, receivedData, len);
+}
+
+void WiFiApTcpServer::sendData(int client_socket, uint8_t *sendingData, uint16_t len) {
+    send(client_socket, sendingData, len, 0);
 }

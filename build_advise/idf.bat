@@ -1,0 +1,1 @@
+python absolute_path_to_esp_idf\esp-idf-v5.4.1\tools\idf.py %*
