@@ -48,9 +48,9 @@ static bool adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_att
 
 extern "C" void app_main(void) {
 //    tcpServer.start();
-    Coil coil(2);
-    SimpleInputDelayed simpleInput(13, 1000);
-    Pulse pulse(2000);
+//    Coil coil(2);
+//    SimpleInputDelayed simpleInput(13, 1000);
+//    Pulse pulse(2000);
 //    xTaskCreate(testTask, "testTask", configMINIMAL_STACK_SIZE * 20, nullptr,
 //                tskIDLE_PRIORITY + 1, nullptr);
 
@@ -59,7 +59,6 @@ extern "C" void app_main(void) {
     adc_oneshot_unit_init_cfg_t init_config;
     init_config.unit_id = ADC_UNIT_1;
     ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adc1_handle));
-
     //-------------ADC1 Config---------------//
     adc_oneshot_chan_cfg_t config;
     config.atten = ADC_ATTEN_DB_12;
@@ -72,14 +71,13 @@ extern "C" void app_main(void) {
 
     int result = 0;
     while(1){
-//        adc_oneshot_read(adc1_handle, ADC_CHANNEL_7, &result);
+        adc_oneshot_read(adc1_handle, ADC_CHANNEL_7, &result);
         ESP_LOGI("ADC1", "raw measure: %d", result);
 
 
 
-        pulse = simpleInput.isActive();
+//        pulse = simpleInput.isActive();
 //        coil = pulse.get();
-        coil.toggle();
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 }

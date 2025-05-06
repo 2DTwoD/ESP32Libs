@@ -1,0 +1,1 @@
+ xtensa-esp32-elf-addr2line -fe .\ESP32Libs.elf [Backtrace copy paste]
