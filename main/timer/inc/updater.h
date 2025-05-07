@@ -1,7 +1,10 @@
 #ifndef UPDATER_H
 #define UPDATER_H
 
+#include <esp_attr.h>
 #include "driver/gptimer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "array_list.h"
 
@@ -21,7 +24,7 @@ private:
     inline static gptimer_handle_t timer{nullptr};
 public:
     static void init();
-    static bool timerCallBack(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *userData);
+    static bool IRAM_ATTR timerCallBack(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *userData);
     static void addObj(IUpdated1ms* obj);
     static void start();
     static void stop();

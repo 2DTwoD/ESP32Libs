@@ -23,7 +23,7 @@ void Updater::init() {
     //Запуск таймера
     start();
 }
-bool Updater::timerCallBack(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *userData) {
+bool IRAM_ATTR Updater::timerCallBack(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *userData) {
     if(Updater::updateList == nullptr) return false;
     Updater::updateList->forEach([](auto obj) {
         obj->update1ms();
