@@ -10,6 +10,9 @@ class CommonTimer {
 		bool impulse{false};
 	public:
 		explicit CommonTimer(uint32_t period);
+
+        virtual ~CommonTimer();
+
         virtual void update();
 		uint32_t getPeriod() const;
 		void setPeriod(uint32_t value);

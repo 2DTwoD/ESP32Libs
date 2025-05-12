@@ -115,3 +115,5 @@ bool CommonTimer::isFree() const{
 bool CommonTimer::inPause() const {
     return notStarted() && notFinished();
 }
+
+CommonTimer::~CommonTimer() = default;
