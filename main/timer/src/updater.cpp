@@ -2,6 +2,7 @@
 
 void Updater::init() {
     updateList = new ArrayList<IUpdated1ms*>(nullptr);
+
     //Настройка таймера
     gptimer_config_t timerConfig;
     timerConfig.clk_src = GPTIMER_CLK_SRC_DEFAULT;
@@ -9,16 +10,18 @@ void Updater::init() {
     timerConfig.resolution_hz = 1000000;
     timerConfig.intr_priority = 0;
     gptimer_new_timer(&timerConfig, &timer);
-    gptimer_event_callbacks_t cbs = {
-            timerCallBack,
-    };
+
+    //Событие переполнения
+    gptimer_event_callbacks_t cbs;
+    cbs.on_alarm = timerCallBack;
     gptimer_register_event_callbacks(timer, &cbs, nullptr);
+
     gptimer_enable(timer);
-    gptimer_alarm_config_t alarm_config = {
-            10000,
-            0,
-            {true},
-    };
+
+    gptimer_alarm_config_t alarm_config;
+    alarm_config.alarm_count = 1000;
+    alarm_config.reload_count = 0;
+    alarm_config.flags.auto_reload_on_alarm = true;
     gptimer_set_alarm_action(timer, &alarm_config);
     //Запуск таймера
     start();
