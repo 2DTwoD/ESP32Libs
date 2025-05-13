@@ -2,7 +2,7 @@
 
 void Updater::init() {
     updateList = new ArrayList<IUpdated1ms*>(nullptr);
-    //Настройки таймера
+    //Настройка таймера
     gptimer_config_t timerConfig;
     timerConfig.clk_src = GPTIMER_CLK_SRC_DEFAULT;
     timerConfig.direction = GPTIMER_COUNT_UP;
@@ -15,7 +15,7 @@ void Updater::init() {
     gptimer_register_event_callbacks(timer, &cbs, nullptr);
     gptimer_enable(timer);
     gptimer_alarm_config_t alarm_config = {
-            1000,
+            10000,
             0,
             {true},
     };

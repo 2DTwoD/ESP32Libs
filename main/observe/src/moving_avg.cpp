@@ -21,7 +21,7 @@ void MovAvg::updateSomewhere(){
 	if(++pos >= size){
 		pos = 0;
 	}
-	float avg;
+	float avg{0.0};
 	for(uint8_t i = 0; i < size; i++){
 		avg += row[i];
 	}
@@ -31,10 +31,4 @@ void MovAvg::updateSomewhere(){
 MovAvg& MovAvg::operator=(float value){
 	set(value);
 	return *this;
-}
-float *const MovAvg::getInRef(){
-	return &in;
-}
-float *const MovAvg::getOutRef(){
-	return &out;
 }

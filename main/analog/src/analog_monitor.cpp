@@ -1,10 +1,11 @@
 #include "analog_monitor.h"
-#include "soc_caps.h"
 
 AnalogMonitor::AnalogMonitor(adc_unit_t adcUnit, adc_channel_t channel,float valueMin, float valueMax,
                              adc_bitwidth_t bitWidth, adc_atten_t atten):
+                             AdcReader(adcUnit, channel, bitWidth, atten),
                              Monitor(valueMin, valueMax),
-                             AdcReader(adcUnit, channel, bitWidth, atten){
+                             avg(100){
+    Updater::addObj(this);
     int capacity = bitWidth;
     if(bitWidth == ADC_BITWIDTH_DEFAULT){
         capacity = SOC_ADC_DIGI_MAX_BITWIDTH;
@@ -20,12 +21,10 @@ AnalogMonitor::~AnalogMonitor(){
 	delete analogScale;
 }
 
-void AnalogMonitor::set(uint16_t value) {
-	*analogScale = value;
-	Monitor::set(analogScale->get());
+void AnalogMonitor::update1ms() {
+    analogScale->set(AdcReader::getDigitsWithUpdate());
+    avg.set(analogScale->get());
+    Monitor::set(avg.get());
+    Monitor::update1ms();
 }
 
-AnalogMonitor& AnalogMonitor::operator=(uint16_t value){
-	set(value);
-	return *this;
-}

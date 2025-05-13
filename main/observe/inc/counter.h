@@ -2,7 +2,6 @@
 #define COUNTER_H
 
 #include <cstdint>
-#include "common.h"
 #include "rf_impulse.h"
 
 class Counter: private RFimpulse{

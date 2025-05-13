@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 #include "math_fun.h"
-#include "interfaces.h"
+#include "updater.h"
 
 class MovAvg: public IUpdatedSomewhere{
 	private:
@@ -21,8 +21,6 @@ class MovAvg: public IUpdatedSomewhere{
 		float get();
 		void updateSomewhere() override;
 		MovAvg& operator=(float value);
-		float *const getInRef();
-		float *const getOutRef();
 };
 
 #endif //MOVING_AVG_H

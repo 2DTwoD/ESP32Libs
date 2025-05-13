@@ -27,7 +27,8 @@ class Monitor: public IUpdated1ms{
 		~Monitor();
 		void update1ms() override;
 		void set(float value);
-		float get();
+
+    virtual float get();
 		void setTreshold(TRES_TYPE tresType, uint16_t value);
 		void setTresDelay(TRES_TYPE tresType, uint16_t del);
 		bool isHighAlarm();

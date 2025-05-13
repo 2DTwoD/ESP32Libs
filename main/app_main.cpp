@@ -10,27 +10,31 @@
 #include "off_delay.h"
 #include "simple_input_delayed.h"
 #include "task_common.h"
-#include "adc_reader.h"
+#include "analog_monitor.h"
+#include "updater.h"
 
 #include "wifi_ap_tcp_server.h"
 
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
 
+//AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7, 0, 100);
+
 
 extern "C" void app_main(void) {
-    OnDelay onDelay(100);
-    Coil coil(2);
-    onDelay = true;
-    AdcReader adcReader(ADC_UNIT_1, ADC_CHANNEL_7);
+    AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
+//    OnDelay onDelay(100);
+//    Coil coil(2);
+//    onDelay = true;
+
 
     while(1){
-        if(onDelay.get()){
-            coil.toggle();
-            onDelay.again();
-        }
-        adcReader.updateSomewhere();
-        ESP_LOGI("ADC1", "voltage: %d", adcReader.getDigits());
+//        if(onDelay.get()){
+//            coil.toggle();
+//            onDelay.again();
+//        }
+        ESP_LOGI("ADC1", "percent: %f", analogMonitor.get());
+//        ESP_LOGI("ADC1", "voltage: %d", analogMonitor.getDigitsWithUpdate());
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }

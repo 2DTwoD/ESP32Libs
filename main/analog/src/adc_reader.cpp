@@ -2,15 +2,15 @@
 
 AdcReader::AdcReader(adc_unit_t adcUnit, adc_channel_t channel, adc_bitwidth_t bitWidth, adc_atten_t atten):
                                     adcUnit(adcUnit), channel(channel), bitWidth(bitWidth), atten(atten){
-    adc_oneshot_unit_init_cfg_t init_config;
-    init_config.unit_id = adcUnit;
-    init_config.ulp_mode = ADC_ULP_MODE_DISABLE;
-    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adcHandle));
-    adc_oneshot_chan_cfg_t config;
-    config.bitwidth = bitWidth;
-    config.atten = atten;
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, channel, &config));
-    calibrate();
+//    adc_oneshot_unit_init_cfg_t init_config;
+//    init_config.unit_id = adcUnit;
+//    init_config.ulp_mode = ADC_ULP_MODE_DISABLE;
+//    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adcHandle));
+//    adc_oneshot_chan_cfg_t config;
+//    config.bitwidth = bitWidth;
+//    config.atten = atten;
+//    ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, channel, &config));
+//    calibrate();
 }
 
 bool AdcReader::calibrate() {
@@ -38,8 +38,8 @@ bool AdcReader::calibrate() {
 }
 
 void AdcReader::updateSomewhere() {
-    adc_oneshot_read(adcHandle, channel, &digits);
-    adc_cali_raw_to_voltage(adcCaliHandle, digits, &voltage);
+//    adc_oneshot_read(adcHandle, channel, &digits);
+//    adc_cali_raw_to_voltage(adcCaliHandle, digits, &voltage);
 }
 
 int AdcReader::getDigits() const {

@@ -7,6 +7,7 @@ idf_component_register(
         "comm/src/wifi_ap_tcp_server.cpp"
         "discrete/src/coil.cpp"
         "discrete/src/program_coil.cpp"
+        "discrete/src/rf_impulse.cpp"
         "discrete/src/simple_input.cpp"
         "discrete/src/simple_input_delayed.cpp"
         "misc/src/array_fun.cpp"
