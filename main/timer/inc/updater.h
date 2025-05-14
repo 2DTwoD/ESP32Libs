@@ -20,15 +20,14 @@ public:
 
 class Updater{
 private:
-    inline static ArrayList<IUpdated1ms*>* updateList{nullptr};
-    inline static gptimer_handle_t timer{nullptr};
+    inline static auto updateList = new ArrayList<IUpdated1ms*>(nullptr);
+    static void updaterTask(void *pvParameters);
 public:
-    static void init();
-    static bool IRAM_ATTR timerCallBack(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *userData);
     static void addObj(IUpdated1ms* obj);
-    static void start();
-    static void stop();
-    static void reset();
+    static bool update();
+    static bool start();
 };
+
+
 
 #endif //UPDATER_H

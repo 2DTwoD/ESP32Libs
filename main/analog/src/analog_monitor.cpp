@@ -2,9 +2,10 @@
 
 AnalogMonitor::AnalogMonitor(adc_unit_t adcUnit, adc_channel_t channel,float valueMin, float valueMax,
                              adc_bitwidth_t bitWidth, adc_atten_t atten):
-                             AdcReader(adcUnit, channel, bitWidth, atten),
-                             Monitor(valueMin, valueMax),
-                             avg(100){
+        MonitorGeneral(valueMin, valueMax),
+        AdcReader(adcUnit, channel, bitWidth, atten, false),
+        avg(100){
+    AdcReader::initWithCalibrate();
     Updater::addObj(this);
     int capacity = bitWidth;
     if(bitWidth == ADC_BITWIDTH_DEFAULT){
@@ -24,7 +25,6 @@ AnalogMonitor::~AnalogMonitor(){
 void AnalogMonitor::update1ms() {
     analogScale->set(AdcReader::getDigitsWithUpdate());
     avg.set(analogScale->get());
-    Monitor::set(avg.get());
-    Monitor::update1ms();
+    MonitorGeneral::set(avg.get());
+    MonitorGeneral::update();
 }
-

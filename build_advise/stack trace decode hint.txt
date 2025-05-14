@@ -1,1 +1,1 @@
- xtensa-esp32-elf-addr2line -fe .\ESP32Libs.elf [Backtrace copy paste]
+xtensa-esp32-elf-addr2line -fe .\cmake-build-debug\ESP32Libs.elf [Backtrace copy paste]

@@ -1,59 +1,69 @@
 #include "monitor.h"
 
-Monitor::Monitor(float valueMin, float valueMax){
-	inLimits[0] = valueMin;
-	setValueMax(valueMax);
-	tresDelays[0] = new CommonTimer(200);
-	tresDelays[1] = new CommonTimer(200);
-	tresDelays[2] = new CommonTimer(200);
-	tresDelays[3] = new CommonTimer(200);
+MonitorGeneral::MonitorGeneral(float valueMin, float valueMax){
+    inLimits[0] = valueMin;
+    setValueMax(valueMax);
+    tresDelays[0] = new CommonTimer(200);
+    tresDelays[1] = new CommonTimer(200);
+    tresDelays[2] = new CommonTimer(200);
+    tresDelays[3] = new CommonTimer(200);
 }
-Monitor::~Monitor(){
-	for(int i = 0; i < 4; i++){
-		delete tresDelays[i];
-	}
+
+MonitorGeneral::~MonitorGeneral(){
+    for(auto & tresDelay : tresDelays){
+        delete tresDelay;
+    }
 }
-void Monitor::setValueMin(float limit){
+void MonitorGeneral::update() {
+    float range = getRange(inLimits);
+    float inPerc  = in * 100 / range;
+    *tresDelays[0] = inPerc <= tresholds[MON_LL];
+    *tresDelays[1] = inPerc <= tresholds[MON_HL];
+    *tresDelays[2] = inPerc >= tresholds[MON_LH];
+    *tresDelays[3] = inPerc >= tresholds[MON_HH];
+    for(auto & tresDelay : tresDelays){
+        tresDelay->update();
+    }
+}
+void MonitorGeneral::setValueMin(float limit){
 	inLimits[0] = min(limit, inLimits[1]);
 }
-void Monitor::setValueMax(float limit){
+void MonitorGeneral::setValueMax(float limit){
 	inLimits[1] = max(limit, inLimits[0]);
 }
-void Monitor::update1ms(){
-	float range = getRange(inLimits);
-	*tresDelays[0] = in * 100 / range <= tresholds[MON_LL];
-	*tresDelays[1] = in * 100 / range <= tresholds[MON_HL];
-	*tresDelays[2] = in * 100 / range >= tresholds[MON_LH];
-	*tresDelays[3] = in * 100 / range >= tresholds[MON_HH];
-	for(int i = 0; i < 4; i++){
-		tresDelays[i]->update();
-	}
-}
-float Monitor::get(){
+float MonitorGeneral::get(){
 	return in;
 }
-void Monitor::set(float value){
+void MonitorGeneral::set(float value){
 	in = limit(value, inLimits[0], inLimits[1]);
 }
-void Monitor::setTreshold(TRES_TYPE tresType, uint16_t value){
+void MonitorGeneral::setTreshold(TRES_TYPE tresType, uint16_t value){
 	tresholds[tresType] = value;
 }
-void Monitor::setTresDelay(TRES_TYPE tresType, uint16_t del){
+void MonitorGeneral::setTresDelay(TRES_TYPE tresType, uint16_t del){
 	tresDelays[tresType]->setPeriod(del);
 }
-bool Monitor::isHighAlarm(){
+bool MonitorGeneral::isHighAlarm(){
 	return tresDelays[MON_HH]->finished();
 }
-bool Monitor::isHighWarn(){
+bool MonitorGeneral::isHighWarn(){
 	return tresDelays[MON_LH]->finished();
 }
-bool Monitor::isLowWarn(){
+bool MonitorGeneral::isLowWarn(){
 	return tresDelays[MON_HL]->finished();
 }
-bool Monitor::isLowAlarm(){
+bool MonitorGeneral::isLowAlarm(){
 	return tresDelays[MON_LL]->finished();
 }
-Monitor& Monitor::operator=(float value){
-	set(value);
-	return *this;
+MonitorGeneral& MonitorGeneral::operator=(float value) {
+    set(value);
+    return *this;
+}
+
+Monitor::Monitor(float valueMin, float valueMax) : MonitorGeneral(valueMin, valueMax) {
+    Updater::addObj(this);
+}
+
+void Monitor::update1ms() {
+    MonitorGeneral::update();
 }

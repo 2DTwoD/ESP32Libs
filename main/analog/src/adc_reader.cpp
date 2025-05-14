@@ -1,16 +1,23 @@
 #include "adc_reader.h"
 
-AdcReader::AdcReader(adc_unit_t adcUnit, adc_channel_t channel, adc_bitwidth_t bitWidth, adc_atten_t atten):
-                                    adcUnit(adcUnit), channel(channel), bitWidth(bitWidth), atten(atten){
-//    adc_oneshot_unit_init_cfg_t init_config;
-//    init_config.unit_id = adcUnit;
-//    init_config.ulp_mode = ADC_ULP_MODE_DISABLE;
-//    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adcHandle));
-//    adc_oneshot_chan_cfg_t config;
-//    config.bitwidth = bitWidth;
-//    config.atten = atten;
-//    ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, channel, &config));
-//    calibrate();
+AdcReader::AdcReader(adc_unit_t adcUnit, adc_channel_t channel, adc_bitwidth_t bitWidth, adc_atten_t atten,
+                     bool withInit): adcUnit(adcUnit), channel(channel), bitWidth(bitWidth), atten(atten){
+    if(withInit){
+        initWithCalibrate();
+    }
+}
+
+void AdcReader::init() {
+    if(adcHandle != nullptr) return;
+    adc_oneshot_unit_init_cfg_t init_config;
+    init_config.unit_id = adcUnit;
+    init_config.clk_src = ADC_RTC_CLK_SRC_DEFAULT;
+    init_config.ulp_mode = ADC_ULP_MODE_DISABLE;
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adcHandle));
+    adc_oneshot_chan_cfg_t config;
+    config.bitwidth = bitWidth;
+    config.atten = atten;
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, channel, &config));
 }
 
 bool AdcReader::calibrate() {
@@ -37,9 +44,18 @@ bool AdcReader::calibrate() {
     return calibrated;
 }
 
-void AdcReader::updateSomewhere() {
-//    adc_oneshot_read(adcHandle, channel, &digits);
-//    adc_cali_raw_to_voltage(adcCaliHandle, digits, &voltage);
+bool AdcReader::initWithCalibrate() {
+    init();
+    return calibrate();
+}
+
+void AdcReader::updateDigits() {
+    adc_oneshot_read(adcHandle, channel, &digits);
+}
+
+void AdcReader::updateVoltage() {
+    if(adcCaliHandle == nullptr) return;
+    adc_cali_raw_to_voltage(adcCaliHandle, digits, &voltage);
 }
 
 int AdcReader::getDigits() const {
@@ -51,12 +67,12 @@ int AdcReader::getMilliVolts() const {
 }
 
 int AdcReader::getDigitsWithUpdate() {
-    updateSomewhere();
+    updateDigits();
     return getDigits();
 }
 
 int AdcReader::getMilliVoltsWithUpdate() {
-    updateSomewhere();
+    updateVoltage();
     return getMilliVolts();
 }
 

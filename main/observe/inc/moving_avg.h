@@ -7,19 +7,20 @@
 #include "math_fun.h"
 #include "updater.h"
 
-class MovAvg: public IUpdatedSomewhere{
+class MovAvg{
 	private:
 		float *row = nullptr;
 		uint8_t size;
 		uint8_t pos;
 		float in;
 		float out;
+        void update();
 	public:
 		MovAvg(uint8_t size = 1);
 		~MovAvg();
 		void set(float value);
 		float get();
-		void updateSomewhere() override;
+
 		MovAvg& operator=(float value);
 };
 

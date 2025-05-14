@@ -11,12 +11,12 @@ MovAvg::~MovAvg(){
 }
 void MovAvg::set(float value){
 	in = value;
-	updateSomewhere();
+	update();
 }
 float MovAvg::get(){
 	return out;
 }
-void MovAvg::updateSomewhere(){
+void MovAvg::update(){
 	row[pos] = in;
 	if(++pos >= size){
 		pos = 0;

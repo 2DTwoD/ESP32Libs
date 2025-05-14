@@ -18,24 +18,20 @@
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
 
-//AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7, 0, 100);
-
+AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
+OnDelay onDelay(100);
+Coil coil(2);
 
 extern "C" void app_main(void) {
-    AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
-//    OnDelay onDelay(100);
-//    Coil coil(2);
-//    onDelay = true;
-
-
+    onDelay = true;
+    Updater::start();
     while(1){
-//        if(onDelay.get()){
-//            coil.toggle();
-//            onDelay.again();
-//        }
+        if(onDelay.get()){
+            coil.toggle();
+            onDelay.again();
+        }
         ESP_LOGI("ADC1", "percent: %f", analogMonitor.get());
-//        ESP_LOGI("ADC1", "voltage: %d", analogMonitor.getDigitsWithUpdate());
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 

@@ -8,7 +8,7 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include <esp_log.h>
 
-class AdcReader: IUpdatedSomewhere{
+class AdcReader{
 private:
     adc_oneshot_unit_handle_t adcHandle{nullptr};
     adc_unit_t adcUnit;
@@ -20,13 +20,16 @@ private:
     int voltage;
 public:
     AdcReader(adc_unit_t adcUnit, adc_channel_t channel,
-              adc_bitwidth_t bitWidth = ADC_BITWIDTH_DEFAULT, adc_atten_t atten = ADC_ATTEN_DB_12);
+              adc_bitwidth_t bitWidth = ADC_BITWIDTH_DEFAULT, adc_atten_t atten = ADC_ATTEN_DB_12, bool withInit = true);
+    void init();
     bool calibrate();
+    bool initWithCalibrate();
     int getDigits() const;
     int getDigitsWithUpdate();
     int getMilliVolts() const;
     int getMilliVoltsWithUpdate();
-    void updateSomewhere() override;
+    void updateDigits();
+    void updateVoltage();
 };
 
 ////Continuous measure

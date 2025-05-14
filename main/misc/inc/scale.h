@@ -5,7 +5,7 @@
 #include "math_fun.h"
 
 template<typename T, typename R>
-class Scale: public IUpdatedSomewhere{
+class Scale{
 	private:
 		T in;
 		T minIn;
@@ -13,20 +13,21 @@ class Scale: public IUpdatedSomewhere{
 		R out;
 		R minOut;
 		R maxOut;
+        void update(){
+            out = (maxOut - minOut) * (in - minIn) / (maxIn - minIn) + minOut;
+        }
 	public:
 		Scale(T minIn, T maxIn, R minOut, R maxOut): minIn(minIn), maxIn(maxIn), minOut(minOut), maxOut(maxOut){
 		}
         virtual ~Scale()= default;
 		void set(T value){
 			in = limit(value, minIn, maxIn);
-			updateSomewhere();
+			update();
 		}
 		R get(){
 			return out;
 		}
-		void updateSomewhere() override{
-			out = (maxOut - minOut) * (in - minIn) / (maxIn - minIn) + minOut;
-		}
+
 		Scale<T, R>& operator=(T value){
 			set(value);
 			return *this;

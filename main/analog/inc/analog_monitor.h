@@ -11,16 +11,15 @@
 #include "adc_reader.h"
 #include "moving_avg.h"
 
-class AnalogMonitor: private AdcReader, public Monitor{
+class AnalogMonitor: public MonitorGeneral, AdcReader, IUpdated1ms {
 	private:
 		Scale<uint16_t, float> *analogScale{nullptr};
         MovAvg avg;
 	public:
 		AnalogMonitor(adc_unit_t adcUnit, adc_channel_t channel,float valueMin = 0.0f, float valueMax = 100.0f,
                       adc_bitwidth_t bitWidth = ADC_BITWIDTH_DEFAULT, adc_atten_t atten = ADC_ATTEN_DB_12);
-
-        void update1ms() override;
         ~AnalogMonitor();
+        void update1ms() override;
 };
 
 #endif //ANALOG_MONITOR_H
