@@ -18,9 +18,10 @@ private:
     adc_cali_handle_t adcCaliHandle{nullptr};
     int digits;
     int voltage;
+    const char* TAG = "ADCReader";
 public:
     AdcReader(adc_unit_t adcUnit, adc_channel_t channel,
-              adc_bitwidth_t bitWidth = ADC_BITWIDTH_DEFAULT, adc_atten_t atten = ADC_ATTEN_DB_12, bool withInit = true);
+              adc_bitwidth_t bitWidth = ADC_BITWIDTH_DEFAULT, adc_atten_t atten = ADC_ATTEN_DB_12);
     void init();
     bool calibrate();
     bool initWithCalibrate();
@@ -28,8 +29,9 @@ public:
     int getDigitsWithUpdate();
     int getMilliVolts() const;
     int getMilliVoltsWithUpdate();
-    void updateDigits();
-    void updateVoltage();
+    bool updateDigits();
+    bool updateVoltage();
+    bool updateAll();
 };
 
 ////Continuous measure

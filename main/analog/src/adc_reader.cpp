@@ -1,10 +1,8 @@
 #include "adc_reader.h"
 
-AdcReader::AdcReader(adc_unit_t adcUnit, adc_channel_t channel, adc_bitwidth_t bitWidth, adc_atten_t atten,
-                     bool withInit): adcUnit(adcUnit), channel(channel), bitWidth(bitWidth), atten(atten){
-    if(withInit){
-        initWithCalibrate();
-    }
+AdcReader::AdcReader(adc_unit_t adcUnit, adc_channel_t channel, adc_bitwidth_t bitWidth, adc_atten_t atten):
+                    adcUnit(adcUnit), channel(channel), bitWidth(bitWidth), atten(atten){
+    initWithCalibrate();
 }
 
 void AdcReader::init() {
@@ -49,13 +47,13 @@ bool AdcReader::initWithCalibrate() {
     return calibrate();
 }
 
-void AdcReader::updateDigits() {
-    adc_oneshot_read(adcHandle, channel, &digits);
+bool AdcReader::updateDigits() {
+    return adc_oneshot_read(adcHandle, channel, &digits) == ESP_OK;
 }
 
-void AdcReader::updateVoltage() {
-    if(adcCaliHandle == nullptr) return;
-    adc_cali_raw_to_voltage(adcCaliHandle, digits, &voltage);
+bool AdcReader::updateVoltage() {
+    if(adcCaliHandle == nullptr) return false;
+    return adc_cali_raw_to_voltage(adcCaliHandle, digits, &voltage) == ESP_OK;
 }
 
 int AdcReader::getDigits() const {
@@ -67,12 +65,20 @@ int AdcReader::getMilliVolts() const {
 }
 
 int AdcReader::getDigitsWithUpdate() {
-    updateDigits();
+    if(!updateDigits()){
+        ESP_LOGI(TAG, "updateDigits error(unit ADC%d, channel %d)", adcUnit + 1, channel);
+    }
     return getDigits();
 }
 
 int AdcReader::getMilliVoltsWithUpdate() {
-    updateVoltage();
+    if(!updateVoltage()){
+        ESP_LOGI(TAG, "updateVoltage error(unit ADC%d, channel %d)", adcUnit + 1, channel);
+    }
     return getMilliVolts();
+}
+
+bool AdcReader::updateAll() {
+    return updateDigits() && updateVoltage();
 }
 

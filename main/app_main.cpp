@@ -11,28 +11,29 @@
 #include "simple_input_delayed.h"
 #include "task_common.h"
 #include "analog_monitor.h"
+#include "analog_reader.h"
 #include "updater.h"
+#include "analog_writer_pwm.h"
 
 #include "wifi_ap_tcp_server.h"
 
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
-
-AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
 OnDelay onDelay(100);
-Coil coil(2);
+//Coil coil(2);
 
 extern "C" void app_main(void) {
+    AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
+    AnalogWriterPWM pwmOutput(2, LEDC_CHANNEL_0, LEDC_TIMER_0);
     onDelay = true;
     Updater::start();
     while(1){
         if(onDelay.get()){
-            coil.toggle();
+//            coil.toggle();
             onDelay.again();
         }
-        ESP_LOGI("ADC1", "percent: %f", analogMonitor.get());
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        pwmOutput.set(analogMonitor.get());
+        ESP_LOGI("ADC1", "percent: %f, high: %d", analogMonitor.get(), analogMonitor.isHighAlarm());
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
-
-

@@ -14,7 +14,7 @@ enum TRES_TYPE {
 	MON_HH = 3
 };
 
-class MonitorGeneral{
+class MonitorCommon{
 	private:
 		float in{0.0};
 		void setValueMax(float limit);
@@ -25,8 +25,8 @@ class MonitorGeneral{
     protected:
         void update();
 	public:
-		explicit MonitorGeneral(float valueMin = 0.0, float valueMax = 100.0);
-		~MonitorGeneral();
+		explicit MonitorCommon(float valueMin = 0.0, float valueMax = 100.0);
+		~MonitorCommon();
 		void set(float value);
         virtual float get();
 		void setTreshold(TRES_TYPE tresType, uint16_t value);
@@ -35,10 +35,10 @@ class MonitorGeneral{
 		bool isHighWarn();
 		bool isLowWarn();
 		bool isLowAlarm();
-		MonitorGeneral& operator=(float value);
+		MonitorCommon& operator=(float value);
 };
 
-class Monitor: public MonitorGeneral, IUpdated1ms{
+class Monitor: public MonitorCommon, IUpdated1ms{
 public:
     explicit Monitor(float valueMin = 0.0, float valueMax = 100.0);
     void update1ms() override;
