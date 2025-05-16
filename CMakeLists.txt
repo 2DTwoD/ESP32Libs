@@ -15,5 +15,6 @@ include_directories(
         $ENV{IDF_PATH}/components/esp_adc/include
         $ENV{IDF_PATH}/components/esp_adc/esp32/include
         $ENV{IDF_PATH}/components/esp_driver_ledc/include/driver
+        $ENV{IDF_PATH}/components/esp_driver_dac/include/driver
 )
 project(ESP32Libs)

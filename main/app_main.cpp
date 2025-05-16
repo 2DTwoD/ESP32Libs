@@ -20,20 +20,20 @@
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
 OnDelay onDelay(100);
-//Coil coil(2);
+Coil coil(2);
 
 extern "C" void app_main(void) {
     AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
-    AnalogWriterPWM pwmOutput(2, LEDC_CHANNEL_0, LEDC_TIMER_0);
+    AnalogWriterPwmWithRamp pwmOutput(5, LEDC_CHANNEL_0, LEDC_TIMER_0);
     onDelay = true;
     Updater::start();
     while(1){
         if(onDelay.get()){
-//            coil.toggle();
+            coil.toggle();
             onDelay.again();
         }
-        pwmOutput.set(analogMonitor.get());
-        ESP_LOGI("ADC1", "percent: %f, high: %d", analogMonitor.get(), analogMonitor.isHighAlarm());
+        pwmOutput = analogMonitor.get();
+        ESP_LOGI("ADC1", "percent: %d, high: %d", pwmOutput.get(), analogMonitor.isHighAlarm());
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }

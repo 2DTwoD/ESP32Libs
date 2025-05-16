@@ -7,14 +7,17 @@ AdcReader::AdcReader(adc_unit_t adcUnit, adc_channel_t channel, adc_bitwidth_t b
 
 void AdcReader::init() {
     if(adcHandle != nullptr) return;
-    adc_oneshot_unit_init_cfg_t init_config;
-    init_config.unit_id = adcUnit;
-    init_config.clk_src = ADC_RTC_CLK_SRC_DEFAULT;
-    init_config.ulp_mode = ADC_ULP_MODE_DISABLE;
+    adc_oneshot_unit_init_cfg_t init_config = {
+            adcUnit,
+            ADC_RTC_CLK_SRC_DEFAULT,
+            ADC_ULP_MODE_DISABLE
+    };
     ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &adcHandle));
-    adc_oneshot_chan_cfg_t config;
-    config.bitwidth = bitWidth;
-    config.atten = atten;
+
+    adc_oneshot_chan_cfg_t config = {
+            atten,
+            bitWidth
+    };
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adcHandle, channel, &config));
 }
 
@@ -24,10 +27,12 @@ bool AdcReader::calibrate() {
     bool calibrated = false;
 
     ESP_LOGI(TAG, "calibration scheme version is %s", "Line Fitting");
-    adc_cali_line_fitting_config_t cali_config;
-    cali_config.unit_id = adcUnit;
-    cali_config.atten = atten;
-    cali_config.bitwidth = bitWidth;
+    adc_cali_line_fitting_config_t cali_config = {
+            adcUnit,
+            atten,
+            bitWidth,
+            0
+    };
     ret = adc_cali_create_scheme_line_fitting(&cali_config, &adcCaliHandle);
     if (ret == ESP_OK) {
         calibrated = true;

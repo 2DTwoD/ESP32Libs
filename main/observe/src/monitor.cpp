@@ -61,7 +61,6 @@ MonitorCommon& MonitorCommon::operator=(float value) {
 }
 
 Monitor::Monitor(float valueMin, float valueMax) : MonitorCommon(valueMin, valueMax) {
-    Updater::addObj(this);
 }
 
 void Monitor::update1ms() {

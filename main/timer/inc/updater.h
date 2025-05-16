@@ -10,6 +10,9 @@
 
 class IUpdated1ms {
 public:
+    IUpdated1ms();
+
+public:
     virtual void update1ms() = 0;
 };
 

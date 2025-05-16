@@ -48,6 +48,10 @@
 //    gptimer_set_raw_count(timer, 0);
 //}
 
+IUpdated1ms::IUpdated1ms() {
+    Updater::addObj(this);
+}
+
 void Updater::addObj(IUpdated1ms *obj) {
     updateList->add(obj);
 }

@@ -32,7 +32,6 @@ void OffDelayCommon::again(){
 
 //OffDelay
 OffDelay::OffDelay(uint32_t period): OffDelayCommon(period){
-    Updater::addObj(this);
 }
 void OffDelay::update1ms(){
 	OffDelayCommon::update();

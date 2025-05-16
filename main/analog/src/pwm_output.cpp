@@ -21,7 +21,7 @@ PwmOutput::PwmOutput(uint8_t pin, ledc_channel_t ledcChannel,ledc_timer_t timer,
             0,
             0,
             LEDC_SLEEP_MODE_NO_ALIVE_NO_PD,
-            {1}
+            {false}
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 }

@@ -21,7 +21,7 @@ void OnDelayCommon::again() {
 
 //OnDelay
 OnDelay::OnDelay(uint32_t period): OnDelayCommon(period){
-    Updater::addObj(this);
+//    Updater::addObj(this);
 }
 void OnDelay::update1ms(){
 	OnDelayCommon::update();

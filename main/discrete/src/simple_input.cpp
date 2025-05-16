@@ -11,7 +11,7 @@ SimpleInput::SimpleInput(gpio_num_t pinNumber, SimpleInputPull pull): pinNumber(
         pullDownEn = GPIO_PULLDOWN_ENABLE;
     }
 
-    gpio_config_t config;
+    gpio_config_t config{};
     config.pin_bit_mask = 1UL << pinNumber;
     config.mode = GPIO_MODE_INPUT;
     config.pull_up_en = pullUpEn;

@@ -4,7 +4,6 @@ AnalogMonitor::AnalogMonitor(adc_unit_t adcUnit, adc_channel_t channel,float val
                              adc_bitwidth_t bitWidth, adc_atten_t atten, uint8_t avgCap):
                              AnalogReaderCommon(adcUnit, channel, valueMin, valueMax, bitWidth, atten, avgCap),
                              MonitorCommon(valueMin, valueMax){
-    Updater::addObj(this);
 }
 
 void AnalogMonitor::update1ms() {

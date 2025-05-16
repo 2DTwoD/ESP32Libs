@@ -3,7 +3,6 @@
 SimpleInputDelayed::SimpleInputDelayed(gpio_num_t pinNumber, SimpleInputPull pull,
                                        uint32_t period): SimpleInput(pinNumber,
                                                                      pull), OnDelay(period) {
-    Updater::addObj(this);
 }
 
 SimpleInputDelayed::SimpleInputDelayed(int pinNumber,

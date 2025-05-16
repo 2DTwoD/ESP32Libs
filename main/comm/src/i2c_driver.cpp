@@ -2,11 +2,12 @@
 
 I2CDriver::I2CDriver(i2c_port_num_t port, uint8_t sclPin, uint8_t sdaPin, int32_t timeout = -1, bool pullUp) {
     bus_handle = new i2c_master_bus_handle_t();
-    I2CParams params;
-    params.port = port;
-    params.sclPin = (gpio_num_t)sclPin;
-    params.sdaPin = (gpio_num_t)sdaPin;
-    params.pullUp = pullUp;
+    I2CParams params = {
+            port,
+            (gpio_num_t)sclPin,
+            (gpio_num_t)sdaPin,
+            pullUp
+    };
     if(init(&params) != COMM_OK){
         ESP_LOGI(errorTag, "I2CDriver constructor error");
     }
@@ -15,7 +16,7 @@ I2CDriver::I2CDriver(i2c_port_num_t port, uint8_t sclPin, uint8_t sdaPin, int32_
 }
 
 CommStatus I2CDriver::init(I2CParams* commParams) {
-    i2c_master_bus_config_t i2c_master_config;
+    i2c_master_bus_config_t i2c_master_config{};
     i2c_master_config.clk_source = I2C_CLK_SRC_DEFAULT;
     i2c_master_config.i2c_port = commParams->port;
     i2c_master_config.scl_io_num = commParams->sclPin;
@@ -63,7 +64,7 @@ CommStatus I2CDriver::addSlave(uint8_t address, uint32_t speed,i2c_addr_bit_len_
     if(bus_handle == nullptr){
         return COMM_ERROR;
     }
-    i2c_device_config_t i2c_device_config;
+    i2c_device_config_t i2c_device_config{};
     i2c_device_config.dev_addr_length = addrLen;
     i2c_device_config.device_address = address;
     i2c_device_config.scl_speed_hz = speed;

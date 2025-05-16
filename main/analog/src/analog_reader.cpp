@@ -32,7 +32,6 @@ float AnalogReaderCommon::get() {
 AnalogReader::AnalogReader(adc_unit_t adcUnit, adc_channel_t channel, float valueMin, float valueMax,
                            adc_bitwidth_t bitWidth, adc_atten_t atten) :
                            AnalogReaderCommon(adcUnit, channel, valueMin, valueMax, bitWidth, atten) {
-    Updater::addObj(this);
 }
 
 void AnalogReader::update1ms() {

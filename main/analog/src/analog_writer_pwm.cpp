@@ -16,7 +16,7 @@ AnalogWriterPWM::~AnalogWriterPWM() {
 
 void AnalogWriterPWM::set(float value) {
     scale->set(value);
-    PwmOutput::set(AnalogWriterPWM::get());
+    PwmOutput::set(get());
 }
 
 uint16_t AnalogWriterPWM::get() {
@@ -24,6 +24,24 @@ uint16_t AnalogWriterPWM::get() {
 }
 
 AnalogWriterPWM &AnalogWriterPWM::operator=(float value) {
-    AnalogWriterPWM::set(value);
+    set(value);
     return *this;
+}
+
+AnalogWriterPwmWithRamp::AnalogWriterPwmWithRamp(uint8_t pin, ledc_channel_t ledcChannel, ledc_timer_t timer,
+                                                 float inputMin, float inputMax, uint32_t fullRangeTime,
+                                                 ledc_timer_bit_t dutyRes, uint32_t freq):
+                                                 AnalogWriterPWM(pin, ledcChannel, timer, inputMin,
+                                                                 inputMax, dutyRes, freq),
+                                                 RampCommon(fullRangeTime, inputMin, inputMax){
+
+}
+
+void AnalogWriterPwmWithRamp::update1ms() {
+    RampCommon::update();
+    AnalogWriterPWM::set(RampCommon::get());
+}
+
+void AnalogWriterPwmWithRamp::set(float value) {
+    RampCommon::set(value);
 }

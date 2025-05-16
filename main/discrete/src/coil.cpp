@@ -2,7 +2,7 @@
 
 Coil::Coil(gpio_num_t pinNumber): pinNumber(pinNumber){
 
-    gpio_config_t config;
+    gpio_config_t config{};
     config.pin_bit_mask = 1UL << pinNumber;
     config.mode = GPIO_MODE_INPUT_OUTPUT;
     config.pull_up_en = GPIO_PULLUP_DISABLE;

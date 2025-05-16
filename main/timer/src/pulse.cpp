@@ -38,7 +38,6 @@ void PulseCommon::again() {
 
 //Pulse
 Pulse::Pulse(uint32_t period): PulseCommon(period){
-    Updater::addObj(this);
 }
 void Pulse::update1ms(){
 	PulseCommon::update();
@@ -46,7 +45,6 @@ void Pulse::update1ms(){
 
 //PulseInterrapt
 PulseInterrapt::PulseInterrapt(uint32_t period): PulseCommon(period){
-    Updater::addObj(this);
 }
 void PulseInterrapt::update1ms(){
 	PulseCommon::update();
