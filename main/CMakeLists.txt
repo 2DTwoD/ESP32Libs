@@ -4,6 +4,7 @@ idf_component_register(
         "analog/src/adc_reader.cpp"
         "analog/src/analog_monitor.cpp"
         "analog/src/analog_reader.cpp"
+        "analog/src/analog_writer_dac.cpp"
         "analog/src/analog_writer_pwm.cpp"
         "analog/src/dac_output.cpp"
         "analog/src/pwm_output.cpp"

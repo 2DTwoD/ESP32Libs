@@ -2,15 +2,14 @@
 #define DAC_OUTPUT_H
 
 #include <cstdint>
-#include "dac_oneshot.h"
-#include <hal/dac_types.h>
+#include <driver/dac_oneshot.h>
 
 class DacOutput{
 private:
     dac_oneshot_handle_t dacHandle{nullptr};
 public:
-    DacOutput();
-    void set(uint16_t value);
+    DacOutput(dac_channel_t channel);
+    void set(uint8_t value);
 };
 
 #endif //DAC_OUTPUT_H

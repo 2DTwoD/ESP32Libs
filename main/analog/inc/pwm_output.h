@@ -2,7 +2,7 @@
 #define PWM_OUTPUT_H
 
 #include <hal/ledc_types.h>
-#include "ledc.h"
+#include "driver/ledc.h"
 #include "esp_err.h"
 
 class PwmOutput{
