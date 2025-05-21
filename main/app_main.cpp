@@ -17,6 +17,7 @@
 #include "analog_writer_dac.h"
 
 #include "wifi_ap_tcp_server.h"
+#include "nimble_server.h"
 
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
@@ -28,6 +29,7 @@ extern "C" void app_main(void) {
     AnalogWriterPwmWithRamp pwmOutput(5, LEDC_CHANNEL_0, LEDC_TIMER_0);
     AnalogWriterDacWithRamp analogWriterDac(DAC_CHAN_0);
     onDelay = true;
+    ble_go();
     Updater::start();
     while(1){
         if(onDelay.get()){
@@ -36,7 +38,7 @@ extern "C" void app_main(void) {
         }
         analogWriterDac = analogMonitor.get();
         pwmOutput = analogMonitor.get();
-        ESP_LOGI("DAC", "digits: %d, high: %d", analogWriterDac.get(), analogMonitor.isHighAlarm());
+        ESP_LOGI("DAC", "digits: %d", analogWriterDac.get());
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }

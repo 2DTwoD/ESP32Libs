@@ -9,6 +9,7 @@ idf_component_register(
         "analog/src/dac_output.cpp"
         "analog/src/pwm_output.cpp"
         "comm/src/i2c_driver.cpp"
+        "comm/src/nimble_server.cpp"
         "comm/src/wifi_ap_tcp_server.cpp"
         "control/src/pid.cpp"
         "control/src/ramp.cpp"
@@ -33,7 +34,20 @@ idf_component_register(
         "timer/src/pulse.cpp"
         "timer/src/updater.cpp"
 
-        PRIV_REQUIRES spi_flash
+        PRIV_REQUIRES
+        spi_flash
+        bt
+        esp_driver_dac
+        esp_driver_gpio
+        esp_driver_gptimer
+        esp_driver_i2c
+        esp_wifi
+        esp_event
+        nvs_flash
+        esp_netif
+        esp_partition
+        esp_adc
+        esp_driver_ledc
 
         INCLUDE_DIRS
         "analog/inc"

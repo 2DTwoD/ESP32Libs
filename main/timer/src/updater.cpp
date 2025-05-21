@@ -65,7 +65,7 @@ bool Updater::update() {
 }
 
 bool Updater::start() {
-    return xTaskCreate(Updater::updaterTask, "updTask", 1024,
+    return xTaskCreate(Updater::updaterTask, "updTask", 4 * 1024,
                        nullptr, 10, nullptr) == pdPASS;
 }
 
