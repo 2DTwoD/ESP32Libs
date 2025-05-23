@@ -20,25 +20,38 @@
 #include "nimble_server.h"
 
 
+#include "bleprph.h"
+#include "nimble.h"
+
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
-OnDelay onDelay(100);
-Coil coil(2);
+//OnDelay onDelay(100);
+//OnDelay onDelay2(100000);
+//Coil coil(2);
 
 extern "C" void app_main(void) {
-    AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
-    AnalogWriterPwmWithRamp pwmOutput(5, LEDC_CHANNEL_0, LEDC_TIMER_0);
-    AnalogWriterDacWithRamp analogWriterDac(DAC_CHAN_0);
-    onDelay = true;
-    ble_go();
-    Updater::start();
+//    AnalogMonitor analogMonitor(ADC_UNIT_1, ADC_CHANNEL_7);
+//    AnalogWriterPwmWithRamp pwmOutput(5, LEDC_CHANNEL_0, LEDC_TIMER_0);
+//    AnalogWriterDacWithRamp analogWriterDac(DAC_CHAN_0);
+//    onDelay = true;
+//    onDelay2 = true;
+
+//    startNVS();
+//    startBLE();
+//////!! Start the FreeRTOS task to notify the client
+//    notification="Hello There";
+//    xTaskCreate(vTasksendNotification, "vTasksendNotification", 4096, nullptr, 1, &xHandle);
+    NimBleServer nimBleServer;
+
+//    Updater::start();
     while(1){
-        if(onDelay.get()){
-            coil.toggle();
-            onDelay.again();
-        }
-        analogWriterDac = analogMonitor.get();
-        pwmOutput = analogMonitor.get();
-        ESP_LOGI("DAC", "digits: %d", analogWriterDac.get());
+//        if(onDelay.get()){
+//            coil.toggle();
+//            onDelay.again();
+//        }
+//        analogWriterDac = analogMonitor.get();
+//        pwmOutput = analogMonitor.get();
+////        ESP_LOGI("DAC", "digits: %d", analogWriterDac.get());
+//        ESP_LOGI("OnDelay2", "time: %lu", onDelay2.getCurrentTime());
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }

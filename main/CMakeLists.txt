@@ -11,6 +11,8 @@ idf_component_register(
         "comm/src/i2c_driver.cpp"
         "comm/src/nimble_server.cpp"
         "comm/src/wifi_ap_tcp_server.cpp"
+        "comm/nimble/misc.cpp"
+        "comm/nimble/nimble.cpp"
         "control/src/pid.cpp"
         "control/src/ramp.cpp"
         "control/src/sequence.cpp"
@@ -52,6 +54,7 @@ idf_component_register(
         INCLUDE_DIRS
         "analog/inc"
         "comm/inc"
+        "comm/nimble"
         "control/inc"
         "discrete/inc"
         "misc/inc"
