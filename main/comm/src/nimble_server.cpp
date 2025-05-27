@@ -15,37 +15,33 @@ uuid3{
 },
 bleGatt1{(ble_uuid_t*)&uuid1,
          device_read,
-         nullptr,
-         nullptr,
+         {},
+         {},
          BLE_GATT_CHR_F_READ,
          0,
-         nullptr,
-         nullptr
+         {},
+         {}
 },
 bleGatt2{(ble_uuid_t*)&uuid2,
          device_write,
-         nullptr,
-         nullptr,
+         {},
+         {},
          BLE_GATT_CHR_F_WRITE,
          0,
-         nullptr,
-         nullptr
+         {},
+         {}
 }
 {
     bleGatts[0] = bleGatt1;
     bleGatts[1] = bleGatt2;
+    bleGatts[2] = {};
     gattSvcs[0] = {
             BLE_GATT_SVC_TYPE_PRIMARY,
             (ble_uuid_t*)&uuid3,
             {},
             bleGatts
     };
-    gattSvcs[1] = {
-           BLE_GATT_SVC_TYPE_END,
-           nullptr,
-           {},
-           nullptr
-    };
+    gattSvcs[1] = {};
     //Initialize NVS flash using
     nvs_flash_init();
     //Initialize the host stack
@@ -62,7 +58,6 @@ bleGatt2{(ble_uuid_t*)&uuid2,
     ble_gatts_add_svcs(gattSvcs);
     //Initialize application
     ble_hs_cfg.sync_cb = ble_app_on_sync;
-    vTaskDelay(10);
     //Run the thread
     nimble_port_freertos_init(host_task);
 }
@@ -89,7 +84,7 @@ void NimBleServer::host_task(void *param)  {
 
 void NimBleServer::ble_app_advertise() {
     // GAP - device name definition
-    struct ble_hs_adv_fields fields;
+    ble_hs_adv_fields fields{};
     const char *device_name;
     memset(&fields, 0, sizeof(fields));
     // Read the BLE device name
@@ -100,12 +95,13 @@ void NimBleServer::ble_app_advertise() {
     ble_gap_adv_set_fields(&fields);
 
     // GAP - device connectivity definition
-    struct ble_gap_adv_params adv_params;
+    ble_gap_adv_params adv_params{};
     memset(&adv_params, 0, sizeof(adv_params));
     // connectable or non-connectable
     adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
     // discoverable or non-discoverable
     adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
+
     ble_gap_adv_start(ble_addr_type, nullptr, BLE_HS_FOREVER,
                       &adv_params, ble_gap_event, nullptr);
 
@@ -120,12 +116,10 @@ int NimBleServer::ble_gap_event(struct ble_gap_event *event, void *arg) {
                 ble_app_advertise();
             }
             break;
-            // Advertise again after completion of the event
+        // Advertise again after completion of the event
         case BLE_GAP_EVENT_ADV_COMPLETE:
             ESP_LOGI("GAP", "BLE GAP EVENT");
             ble_app_advertise();
-            break;
-        default:
             break;
     }
     return 0;

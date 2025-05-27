@@ -18,10 +18,8 @@
 
 #include "wifi_ap_tcp_server.h"
 #include "nimble_server.h"
+#include "ble_spp_server.h"
 
-
-#include "bleprph.h"
-#include "nimble.h"
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
 //OnDelay onDelay(100);
@@ -35,14 +33,11 @@ extern "C" void app_main(void) {
 //    onDelay = true;
 //    onDelay2 = true;
 
-//    startNVS();
-//    startBLE();
-//////!! Start the FreeRTOS task to notify the client
-//    notification="Hello There";
-//    xTaskCreate(vTasksendNotification, "vTasksendNotification", 4096, nullptr, 1, &xHandle);
     NimBleServer nimBleServer;
 
 //    Updater::start();
+//    go_ble_spp();
+
     while(1){
 //        if(onDelay.get()){
 //            coil.toggle();

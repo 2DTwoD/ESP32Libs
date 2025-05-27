@@ -36,7 +36,7 @@ private:
     ble_uuid16_t uuid3;
     ble_gatt_chr_def bleGatt1;
     ble_gatt_chr_def bleGatt2;
-    ble_gatt_chr_def bleGatts[2];
+    ble_gatt_chr_def bleGatts[3];
     ble_gatt_svc_def gattSvcs[2];
     static inline uint8_t ble_addr_type{0};
     // Read data from ESP32 defined as server
