@@ -27,6 +27,10 @@
     uuid16                              \
 }
 
+#define UUID_READ 0xFEF4
+#define UUID_WRITE 0xDEAD
+#define UUID_PRIMARY 0x180
+
 class NimBleServer{
 private:
     // Array of pointers to other service definitions

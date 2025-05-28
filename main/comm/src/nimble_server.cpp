@@ -1,24 +1,25 @@
+#include <host/util/util.h>
 #include "nimble_server.h"
 
 NimBleServer::NimBleServer():
 uuid1{
     {BLE_UUID_TYPE_16},
-    0xFEF4
+    UUID_READ
 },
 uuid2{
     {BLE_UUID_TYPE_16},
-    0xDEAD
+    UUID_WRITE
 },
 uuid3{
     {BLE_UUID_TYPE_16},
-    0x180
+    UUID_PRIMARY
 },
 bleGatt1{(ble_uuid_t*)&uuid1,
          device_read,
          {},
          {},
          BLE_GATT_CHR_F_READ,
-         0,
+         {},
          {},
          {}
 },
@@ -27,11 +28,10 @@ bleGatt2{(ble_uuid_t*)&uuid2,
          {},
          {},
          BLE_GATT_CHR_F_WRITE,
-         0,
+         {},
          {},
          {}
-}
-{
+}{
     bleGatts[0] = bleGatt1;
     bleGatts[1] = bleGatt2;
     bleGatts[2] = {};
@@ -73,13 +73,16 @@ int NimBleServer::device_write(uint16_t conn_handle, uint16_t attr_handle, struc
 }
 
 void NimBleServer::ble_app_on_sync()  {
-    ble_hs_id_infer_auto(0, &ble_addr_type); // Determines the best address type automatically
-    ble_app_advertise();                                        // Define the BLE connection
+    // Determines the best address type automatically
+    ble_hs_id_infer_auto(0, &ble_addr_type);
+    // Define the BLE connection
+    ble_app_advertise();
 }
 
 void NimBleServer::host_task(void *param)  {
     // This function will return only when nimble_port_stop() is executed
     nimble_port_run();
+    nimble_port_freertos_deinit();
 }
 
 void NimBleServer::ble_app_advertise() {
@@ -92,6 +95,16 @@ void NimBleServer::ble_app_advertise() {
     fields.name = (uint8_t *) device_name;
     fields.name_len = strlen(device_name);
     fields.name_is_complete = 1;
+
+    fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
+    fields.tx_pwr_lvl_is_present = 1;
+    fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
+    fields.uuids16 = (ble_uuid16_t[]) {
+            BLE_UUID16_INIT(UUID_PRIMARY)
+    };
+    fields.num_uuids16 = 1;
+    fields.uuids16_is_complete = 1;
+
     ble_gap_adv_set_fields(&fields);
 
     // GAP - device connectivity definition

@@ -1,6 +1,5 @@
 #ifndef BLE_SPP_SERVER_H
 #define BLE_SPP_SERVER_H
-#include "store/config/ble_store_config.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

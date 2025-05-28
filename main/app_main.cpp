@@ -17,8 +17,9 @@
 #include "analog_writer_dac.h"
 
 #include "wifi_ap_tcp_server.h"
-#include "nimble_server.h"
-#include "ble_spp_server.h"
+//#include "nimble_server.h"
+//#include "ble_spp_server.h"
+#include "bt_classic_spp.h"
 
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
@@ -33,11 +34,11 @@ extern "C" void app_main(void) {
 //    onDelay = true;
 //    onDelay2 = true;
 
-    NimBleServer nimBleServer;
+//    NimBleServer nimBleServer;
 
 //    Updater::start();
 //    go_ble_spp();
-
+    go_bt_classic_spp();
     while(1){
 //        if(onDelay.get()){
 //            coil.toggle();
