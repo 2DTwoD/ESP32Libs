@@ -1,6 +1,40 @@
 #include <host/util/util.h>
 #include "nimble_server.h"
 
+int
+ble_store_util_status_rr1(struct ble_store_status_event *event, void *arg)
+{
+    switch (event->event_code) {
+        case BLE_STORE_EVENT_OVERFLOW:
+            switch (event->overflow.obj_type) {
+                case BLE_STORE_OBJ_TYPE_OUR_SEC:
+                case BLE_STORE_OBJ_TYPE_PEER_SEC:
+                case BLE_STORE_OBJ_TYPE_PEER_ADDR:
+                    return ble_gap_unpair_oldest_peer();
+                case BLE_STORE_OBJ_TYPE_CCCD:
+                case BLE_STORE_OBJ_TYPE_CSFC:
+                    /* Try unpairing oldest peer except current peer */
+                    return ble_gap_unpair_oldest_except(&event->overflow.value->cccd.peer_addr);
+#if MYNEWT_VAL(ENC_ADV_DATA)
+                    case BLE_STORE_OBJ_TYPE_ENC_ADV_DATA:
+            return ble_store_util_delete_ead_oldest_peer();
+#endif
+                default:
+                    return BLE_HS_EUNKNOWN;
+            }
+
+        case BLE_STORE_EVENT_FULL:
+            /* Just proceed with the operation.  If it results in an overflow,
+             * we'll delete a record when the overflow occurs.
+             */
+            return 0;
+
+        default:
+            return BLE_HS_EUNKNOWN;
+    }
+}
+
+
 NimBleServer::NimBleServer():
 uuid1{
     {BLE_UUID_TYPE_16},
@@ -58,6 +92,7 @@ bleGatt2{(ble_uuid_t*)&uuid2,
     ble_gatts_add_svcs(gattSvcs);
     //Initialize application
     ble_hs_cfg.sync_cb = ble_app_on_sync;
+    ble_hs_cfg.store_status_cb = ble_store_util_status_rr1;
     //Run the thread
     nimble_port_freertos_init(host_task);
 }
@@ -96,15 +131,6 @@ void NimBleServer::ble_app_advertise() {
     fields.name_len = strlen(device_name);
     fields.name_is_complete = 1;
 
-    fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
-    fields.tx_pwr_lvl_is_present = 1;
-    fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
-    fields.uuids16 = (ble_uuid16_t[]) {
-            BLE_UUID16_INIT(UUID_PRIMARY)
-    };
-    fields.num_uuids16 = 1;
-    fields.uuids16_is_complete = 1;
-
     ble_gap_adv_set_fields(&fields);
 
     // GAP - device connectivity definition
@@ -117,13 +143,12 @@ void NimBleServer::ble_app_advertise() {
 
     ble_gap_adv_start(ble_addr_type, nullptr, BLE_HS_FOREVER,
                       &adv_params, ble_gap_event, nullptr);
-
 }
 
 int NimBleServer::ble_gap_event(struct ble_gap_event *event, void *arg) {
     switch (event->type) {
         // Advertise if connected
-        case BLE_GAP_EVENT_CONNECT:
+        case BLE_GAP_EVENT_LINK_ESTAB:
             ESP_LOGI("GAP", "BLE GAP EVENT CONNECT %s", event->connect.status == 0 ? "OK!" : "FAILED!");
             if (event->connect.status != 0) {
                 ble_app_advertise();
