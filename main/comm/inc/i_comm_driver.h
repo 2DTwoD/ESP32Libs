@@ -10,12 +10,18 @@ enum CommStatus{
     COMM_ERROR = 1
 };
 
-template <typename T>
-class ICommDriver{
+class ICommRW{
 public:
-    virtual CommStatus init(T* commPars) = 0;
     virtual CommStatus read(uint8_t* bytes, uint16_t len) = 0;
     virtual CommStatus write(uint8_t *const bytes, uint16_t len) = 0;
 };
+
+template <typename T>
+class ICommDriver: public ICommRW{
+public:
+    virtual CommStatus init(T* commPars) = 0;
+};
+
+
 
 #endif //I_COMM_DRIVER_H

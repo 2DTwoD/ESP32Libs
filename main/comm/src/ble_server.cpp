@@ -9,49 +9,56 @@
 #include <host/ble_gatt.h>
 #include <host/util/util.h>
 #include "host/ble_hs.h"
+#include "array_fun.h"
 
 #define TAG "ble_server"
 
 extern "C" void ble_store_config_init(void);
 
-BleServer::BleServer(const char* name):
-    uuid1{
+BleServer::BleServer(const char* name, uint16_t sendBuffSize, uint16_t receiveBuffSize):
+    readUUID{
             {BLE_UUID_TYPE_16},
-            UUID_READ
+            0xFEF4
     },
-    uuid2{
+    writeUUID{
             {BLE_UUID_TYPE_16},
-            UUID_WRITE
+            0xDEAD
     },
-    uuid3{
+    primaryUUID{
             {BLE_UUID_TYPE_16},
-            UUID_PRIMARY
+            0x180
     },
-    bleGatt1{(ble_uuid_t*)&uuid1,
+    bleGatt1{(ble_uuid_t*)&readUUID,
              device_read,
              nullptr,
              nullptr,
              BLE_GATT_CHR_F_READ,
              {},
-             nullptr,
+             &readAttrHandle,
              nullptr
     },
-    bleGatt2{(ble_uuid_t*)&uuid2,
+    bleGatt2{(ble_uuid_t*)&writeUUID,
              device_write,
              nullptr,
              nullptr,
              BLE_GATT_CHR_F_WRITE,
              {},
-             nullptr,
+             &writeAttrHandle,
              nullptr
     }
     {
+    BleServer::sendBuffSize = sendBuffSize;
+    BleServer::receiveBuffSize = receiveBuffSize;
+    sendBuff = new uint8_t[sendBuffSize];
+    receiveBuff = new uint8_t[receiveBuffSize];
+    memset(sendBuff, 0, sendBuffSize);
+    memset(receiveBuff, 0, receiveBuffSize);
     bleGatts[0] = bleGatt1;
     bleGatts[1] = bleGatt2;
     bleGatts[2] = {};
     gattSvcs[0] = {
             BLE_GATT_SVC_TYPE_PRIMARY,
-            (ble_uuid_t*)&uuid3,
+            (ble_uuid_t*)&primaryUUID,
             nullptr,
             bleGatts
     };
@@ -97,7 +104,7 @@ BleServer::BleServer(const char* name):
     ble_store_config_init();
 
     /* Start NimBLE host task thread and return */
-    xTaskCreate(nimble_host_task, "NimBLE Host", 4*1024, nullptr, 5, nullptr);
+    xTaskCreate(nimble_host_task, "NimBLEHost", 4*1024, nullptr, 5, nullptr);
 }
 
 void BleServer::on_stack_reset(int reason) {
@@ -144,14 +151,6 @@ void BleServer::start_advertising() {
     adv_fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
     adv_fields.tx_pwr_lvl_is_present = 1;
 
-//    // Set device appearance
-//    adv_fields.appearance = BLE_GAP_APPEARANCE_GENERIC_TAG;
-//    adv_fields.appearance_is_present = 1;
-//
-//    // Set device LE role
-//    adv_fields.le_role = BLE_GAP_LE_ROLE_PERIPHERAL;
-//    adv_fields.le_role_is_present = 1;
-
     // Set advertiement fields
     if (ble_gap_adv_set_fields(&adv_fields) != 0) {
         ESP_LOGE(TAG, "failed to set advertising data");
@@ -163,9 +162,6 @@ void BleServer::start_advertising() {
     rsp_fields.device_addr_type = own_addr_type;
     rsp_fields.device_addr_is_present = 1;
 
-//    // Set URI
-//    rsp_fields.uri = esp_uri;
-//    rsp_fields.uri_len = sizeof(esp_uri);
 
     // Set advertising interval
     rsp_fields.adv_itvl = BLE_GAP_ADV_ITVL_MS(500);
@@ -186,8 +182,8 @@ void BleServer::start_advertising() {
     adv_params.itvl_max = BLE_GAP_ADV_ITVL_MS(510);
 
     // Start advertising
-    if (ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER, &adv_params,
-                            gap_event_handler, NULL) != 0) {
+    if (ble_gap_adv_start(own_addr_type, nullptr, BLE_HS_FOREVER, &adv_params,
+                            gap_event_handler, nullptr) != 0) {
         ESP_LOGE(TAG, "failed to start advertising");
         return;
     }
@@ -349,7 +345,6 @@ void BleServer::gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *
             // Unknown event
         default:
             assert(0);
-            break;
     }
 }
 
@@ -374,11 +369,34 @@ void BleServer::gatt_svr_subscribe_cb(struct ble_gap_event *event)  {
 }
 
 int BleServer::device_read(uint16_t con_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
-    os_mbuf_append(ctxt->om, "Data from the server", strlen("Data from the server"));
+    ESP_LOGI(TAG, "%c", sendBuff[0]);
+    os_mbuf_append(ctxt->om, sendBuff, sendBuffSize);
     return 0;
 }
 
 int BleServer::device_write(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
-    printf("Data from the client: %.*s\n", ctxt->om->om_len, ctxt->om->om_data);
+    if(ctxt->om->om_len > receiveBuffSize){
+
+        ESP_LOGE(TAG, "Message to big, no place in buffer");
+        return -1;
+    }
+    ESP_LOGI(TAG, "Data from the client: %.*s", ctxt->om->om_len, ctxt->om->om_data);
+    copyArrays(ctxt->om->om_data, receiveBuff, ctxt->om->om_len);
+    copyArrays(receiveBuff, sendBuff, receiveBuffSize);
+
     return 0;
+}
+
+BleServer::~BleServer() {
+    delete[] sendBuff;
+    delete[] receiveBuff;
+}
+
+CommStatus BleServer::read(uint8_t *bytes, uint16_t len) {
+
+    return COMM_ERROR;
+}
+
+CommStatus BleServer::write(uint8_t *const bytes, uint16_t len) {
+    return COMM_ERROR;
 }

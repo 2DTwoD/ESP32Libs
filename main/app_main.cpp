@@ -28,7 +28,7 @@
 //Coil coil(2);
 
 extern "C" void app_main(void) {
-    BleServer bleServer("esp32ble");
+    BleServer bleServer("esp32ble", 10, 10);
     while(1){
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }

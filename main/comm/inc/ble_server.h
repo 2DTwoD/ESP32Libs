@@ -4,19 +4,29 @@
 #include <cstdint>
 #include <host/ble_gatt.h>
 
-#define UUID_READ 0xFEF4
-#define UUID_WRITE 0xDEAD
-#define UUID_PRIMARY 0x180
+#include "i_comm_driver.h"
 
-class BleServer{
+struct BLEParams{
+    const char* name{"BLEsp32"};
+    uint16_t sendBuffSize{128};
+    uint16_t receiveBuffSize{128};
+};
+
+class BleServer: public ICommRW{
 private:
-    ble_uuid16_t uuid1;
-    ble_uuid16_t uuid2;
-    ble_uuid16_t uuid3;
+    ble_uuid16_t readUUID;
+    ble_uuid16_t writeUUID;
+    ble_uuid16_t primaryUUID;
     ble_gatt_chr_def bleGatt1;
     ble_gatt_chr_def bleGatt2;
-    ble_gatt_chr_def bleGatts[3];
-    ble_gatt_svc_def gattSvcs[2];
+    ble_gatt_chr_def bleGatts[3]{};
+    ble_gatt_svc_def gattSvcs[2]{};
+    inline static uint16_t sendBuffSize{0};
+    inline static uint16_t receiveBuffSize{0};
+    inline static uint8_t *sendBuff{nullptr};
+    inline static uint8_t *receiveBuff{nullptr};
+    uint16_t readAttrHandle;
+    uint16_t writeAttrHandle;
     inline static uint8_t own_addr_type{0};
     inline static uint8_t addr_val[6]{0};
     static void on_stack_reset(int reason);
@@ -29,7 +39,13 @@ private:
     static int device_read(uint16_t con_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
     static int device_write(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
 public:
-    explicit BleServer(const char* name);
+    BleServer(const char* name, uint16_t sendBuffSize, uint16_t receiveBuffSize);
+
+    virtual ~BleServer();
+
+    CommStatus read(uint8_t *bytes, uint16_t len) override;
+
+    CommStatus write(uint8_t *const bytes, uint16_t len) override;
 };
 
 #endif //BLE_SERVER_H
