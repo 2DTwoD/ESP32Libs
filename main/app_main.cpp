@@ -28,8 +28,12 @@
 //Coil coil(2);
 
 extern "C" void app_main(void) {
-    BleServer bleServer("esp32ble", 10, 10);
+    BleServer bleServer("esp32ble");
+    bleServer.addAttribute("1", 0xAAA1, BLE_RW, 10);
+    bleServer.addAttribute("2", 0xAAA2, BLE_RW, 10);
+    bleServer.addAttribute("3", 0xAAA3, BLE_RW, 10);
+    bleServer.start();
     while(1){
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

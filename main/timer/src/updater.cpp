@@ -70,8 +70,9 @@ bool Updater::start() {
 }
 
 void Updater::updaterTask(void *pvParameters) {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     while(1){
         Updater::update();
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_PERIOD_MS);
     }
 }

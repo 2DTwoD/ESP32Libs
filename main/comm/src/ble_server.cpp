@@ -11,100 +11,18 @@
 #include "host/ble_hs.h"
 #include "array_fun.h"
 
+
 #define TAG "ble_server"
 
 extern "C" void ble_store_config_init(void);
 
-BleServer::BleServer(const char* name, uint16_t sendBuffSize, uint16_t receiveBuffSize):
-    readUUID{
-            {BLE_UUID_TYPE_16},
-            0xFEF4
-    },
-    writeUUID{
-            {BLE_UUID_TYPE_16},
-            0xDEAD
-    },
+BleServer::BleServer(const char* name):
+    name(name),
     primaryUUID{
             {BLE_UUID_TYPE_16},
             0x180
-    },
-    bleGatt1{(ble_uuid_t*)&readUUID,
-             device_read,
-             nullptr,
-             nullptr,
-             BLE_GATT_CHR_F_READ,
-             {},
-             &readAttrHandle,
-             nullptr
-    },
-    bleGatt2{(ble_uuid_t*)&writeUUID,
-             device_write,
-             nullptr,
-             nullptr,
-             BLE_GATT_CHR_F_WRITE,
-             {},
-             &writeAttrHandle,
-             nullptr
     }
     {
-    BleServer::sendBuffSize = sendBuffSize;
-    BleServer::receiveBuffSize = receiveBuffSize;
-    sendBuff = new uint8_t[sendBuffSize];
-    receiveBuff = new uint8_t[receiveBuffSize];
-    memset(sendBuff, 0, sendBuffSize);
-    memset(receiveBuff, 0, receiveBuffSize);
-    bleGatts[0] = bleGatt1;
-    bleGatts[1] = bleGatt2;
-    bleGatts[2] = {};
-    gattSvcs[0] = {
-            BLE_GATT_SVC_TYPE_PRIMARY,
-            (ble_uuid_t*)&primaryUUID,
-            nullptr,
-            bleGatts
-    };
-    gattSvcs[1] = {};
-    esp_err_t ret;
-    // NVS flash initialization
-    ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "failed to initialize nvs flash, error code: %d ", ret);
-        return;
-    }
-    /* NimBLE stack initialization */
-    if (nimble_port_init() != ESP_OK) {
-        ESP_LOGE(TAG, "failed to initialize nimble stack, error code: %d ", ret);
-        return;
-    }
-    /* Call NimBLE GAP initialization API */
-    ble_svc_gap_init();
-    /* Set GAP device name */
-    if (ble_svc_gap_device_name_set(name) != 0) {
-        ESP_LOGE(TAG, "failed to set device name to %s", name);
-        return;
-    }
-
-    // GATT service initialization
-    ble_svc_gatt_init();
-    // Update GATT services counter and GATT services
-    if (ble_gatts_count_cfg(gattSvcs) != 0 || ble_gatts_add_svcs(gattSvcs) != 0) {
-        ESP_LOGE(TAG, "failed to initialize GATT server");
-        return;
-    }
-
-    ble_hs_cfg.reset_cb = on_stack_reset;
-    ble_hs_cfg.sync_cb = on_stack_sync;
-    ble_hs_cfg.gatts_register_cb = gatt_svr_register_cb;
-    ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
-
-    // Store host configuration
-    ble_store_config_init();
-
-    /* Start NimBLE host task thread and return */
-    xTaskCreate(nimble_host_task, "NimBLEHost", 4*1024, nullptr, 5, nullptr);
 }
 
 void BleServer::on_stack_reset(int reason) {
@@ -233,9 +151,8 @@ int BleServer::gap_event_handler(struct ble_gap_event *event, void *arg) {
                             rc);
                     return rc;
                 }
-            }
+            } else {
                 // Connection failed, restart advertising
-            else {
                 start_advertising();
             }
             return rc;
@@ -249,7 +166,6 @@ int BleServer::gap_event_handler(struct ble_gap_event *event, void *arg) {
             // Restart advertising
             start_advertising();
             return rc;
-
             // Connection parameters update event
         case BLE_GAP_EVENT_CONN_UPDATE:
             // The central has updated the connection parameters
@@ -308,6 +224,21 @@ int BleServer::gap_event_handler(struct ble_gap_event *event, void *arg) {
                      event->mtu.conn_handle, event->mtu.channel_id,
                      event->mtu.value);
             return rc;
+        case BLE_GAP_EVENT_REPEAT_PAIRING:
+            /* We already have a bond with the peer, but it is attempting to
+             * establish a new secure link.  This app sacrifices security for
+             * convenience: just throw away the old bond and accept the new link.
+             */
+
+            /* Delete the old bond. */
+            rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
+            assert(rc == 0);
+            ble_store_util_delete_peer(&desc.peer_id_addr);
+
+            /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
+             * continue with the pairing operation.
+             */
+            return BLE_GAP_REPEAT_PAIRING_RETRY;
     }
     return rc;
 }
@@ -368,35 +299,138 @@ void BleServer::gatt_svr_subscribe_cb(struct ble_gap_event *event)  {
     }
 }
 
-int BleServer::device_read(uint16_t con_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
-    ESP_LOGI(TAG, "%c", sendBuff[0]);
-    os_mbuf_append(ctxt->om, sendBuff, sendBuffSize);
-    return 0;
-}
-
-int BleServer::device_write(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
-    if(ctxt->om->om_len > receiveBuffSize){
-
-        ESP_LOGE(TAG, "Message to big, no place in buffer");
-        return -1;
-    }
-    ESP_LOGI(TAG, "Data from the client: %.*s", ctxt->om->om_len, ctxt->om->om_data);
-    copyArrays(ctxt->om->om_data, receiveBuff, ctxt->om->om_len);
-    copyArrays(receiveBuff, sendBuff, receiveBuffSize);
-
-    return 0;
-}
-
 BleServer::~BleServer() {
-    delete[] sendBuff;
-    delete[] receiveBuff;
+    attributes.forEach([](BleAttribute *attribute){
+        delete[] attribute->data;
+        delete attribute;
+    });
+    delete[] bleGatts;
 }
 
 CommStatus BleServer::read(uint8_t *bytes, uint16_t len) {
-
-    return COMM_ERROR;
+    return COMM_OK;
 }
 
 CommStatus BleServer::write(uint8_t *const bytes, uint16_t len) {
-    return COMM_ERROR;
+    return COMM_OK;
+}
+
+void BleServer::addAttribute(const char* name, uint16_t uuid, BleAccess access, uint8_t dataLen) {
+    auto attribute = new BleAttribute(
+          "",
+          {
+            {BLE_UUID_TYPE_16},
+            uuid
+          },
+          access,
+          new uint8_t[dataLen],
+          dataLen,
+          0);
+    memset(attribute->name, 0, 8);
+    memset(attribute->data, 0, attribute->len);
+    memcpy(attribute->name, name, strlen(name) > 8? 8: strlen(name));
+    attributes.add(attribute);
+}
+
+int BleServer::attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
+    switch (ctxt->op) {
+        case BLE_GATT_ACCESS_OP_READ_CHR:
+            attributes.forEach([attr_handle, ctxt](BleAttribute *attribute){
+                if(attribute->handle == attr_handle){
+                    os_mbuf_append(ctxt->om, attribute->data, attribute->len);
+                }
+            });
+            break;
+        case BLE_GATT_ACCESS_OP_WRITE_CHR:
+            ESP_LOGI(TAG, "device_write: Data from the client: %.*s", ctxt->om->om_len, ctxt->om->om_data);
+            attributes.forEach([attr_handle, ctxt](BleAttribute *attribute){
+                if(attribute->handle == attr_handle) {
+                    memset(attribute->data, 0, attribute->len);
+                    memcpy(attribute->data, ctxt->om->om_data,
+                           ctxt->om->om_len > attribute->len? attribute->len: ctxt->om->om_len);
+                }
+            });
+            break;
+    }
+    return 0;
+}
+
+void BleServer::start() {
+    bleGatts = new ble_gatt_chr_def[attributes.size() + 1];
+    uint8_t index = 0;
+    attributes.forEach([this, &index](BleAttribute *attribute){
+        ble_gatt_chr_flags flags{0};
+        switch (attribute->access) {
+            case BLE_READ:
+                flags = BLE_GATT_CHR_F_READ;
+                break;
+            case BLE_WRITE:
+                flags = BLE_GATT_CHR_F_WRITE;
+                break;
+            case BLE_RW:
+                flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE;
+                break;
+        }
+        ble_gatt_chr_def bleGatt = {
+            (ble_uuid_t*)&attribute->uuid,
+            attributeAccess,
+            {},
+            {},
+            flags,
+            {},
+            &attribute->handle,
+            {}
+        };
+        bleGatts[index++] = bleGatt;
+    });
+    bleGatts[attributes.size()] = {};
+    gattSvcs[0] = {
+            BLE_GATT_SVC_TYPE_PRIMARY,
+            (ble_uuid_t*)&primaryUUID,
+            {},
+            bleGatts
+    };
+    gattSvcs[1] = {};
+    esp_err_t ret;
+    // NVS flash initialization
+    ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "failed to initialize nvs flash, error code: %d ", ret);
+        return;
+    }
+    /* NimBLE stack initialization */
+    if (nimble_port_init() != ESP_OK) {
+        ESP_LOGE(TAG, "failed to initialize nimble stack, error code: %d ", ret);
+        return;
+    }
+    /* Call NimBLE GAP initialization API */
+    ble_svc_gap_init();
+    /* Set GAP device name */
+    if (ble_svc_gap_device_name_set(name) != 0) {
+        ESP_LOGE(TAG, "failed to set device name to %s", name);
+        return;
+    }
+
+    // GATT service initialization
+    ble_svc_gatt_init();
+    // Update GATT services counter and GATT services
+    if (ble_gatts_count_cfg(gattSvcs) != 0 || ble_gatts_add_svcs(gattSvcs) != 0) {
+        ESP_LOGE(TAG, "failed to initialize GATT server");
+        return;
+    }
+
+    ble_hs_cfg.reset_cb = on_stack_reset;
+    ble_hs_cfg.sync_cb = on_stack_sync;
+    ble_hs_cfg.gatts_register_cb = gatt_svr_register_cb;
+    ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
+
+    // Store host configuration
+    ble_store_config_init();
+
+    /* Start NimBLE host task thread and return */
+    xTaskCreate(nimble_host_task, "NimBLEHost", 4*1024, nullptr, 5, nullptr);
 }
