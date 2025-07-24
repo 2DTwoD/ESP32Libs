@@ -121,6 +121,14 @@ public:
         }
     }
 
+    void forEachBreak(std::function<bool(T)> lambda) const{
+        for(uint16_t i = 0; i < size(); i++){
+            if(lambda(array[i])){
+                break;
+            }
+        }
+    }
+
     void forEachModify(std::function<T(T)> lambda){
         for(uint16_t i = 0; i < size(); i++){
             array[i] = lambda(array[i]);

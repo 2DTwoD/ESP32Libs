@@ -29,9 +29,12 @@
 
 extern "C" void app_main(void) {
     BleServer bleServer("esp32ble");
-    bleServer.addAttribute("1", 0xAAA1, BLE_RW, 10);
-    bleServer.addAttribute("2", 0xAAA2, BLE_RW, 10);
-    bleServer.addAttribute("3", 0xAAA3, BLE_RW, 10);
+    bleServer.addService(BLE_TYPE_PRIMARY, 0xA000);
+    bleServer.addCharacteristic(0xA000, 0xA001, BLE_RW, 10);
+    bleServer.addCharacteristic(0xA000, 0xA002, BLE_RW, 15);
+    bleServer.addService(BLE_TYPE_PRIMARY, 0xB000);
+    bleServer.addCharacteristic(0xB000, 0xB001, BLE_RW, 10);
+    bleServer.addCharacteristic(0xB000, 0xB002, BLE_RW, 5);
     bleServer.start();
     while(1){
         vTaskDelay(1000 / portTICK_PERIOD_MS);

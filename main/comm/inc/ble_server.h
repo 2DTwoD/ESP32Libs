@@ -13,24 +13,69 @@ enum BleAccess{
     BLE_RW = 2
 };
 
-struct BleAttribute{
-    char name[8];
+enum BleAttrType{
+    BLE_TYPE_END =  BLE_GATT_SVC_TYPE_END,
+    BLE_TYPE_PRIMARY = BLE_GATT_SVC_TYPE_PRIMARY,
+    BLE_TYPE_SECONDARY = BLE_GATT_SVC_TYPE_SECONDARY
+};
+
+class BleAttribute{
+private:
     ble_uuid16_t uuid;
-    BleAccess access;
+public:
+    explicit BleAttribute(uint16_t uuid);
+    uint16_t getUUID() const;
+    ble_uuid16_t* getUUIDptr();
+};
+
+class BleCharacteristic: public BleAttribute{
+private:
     uint8_t *data;
-    uint8_t len;
+    uint8_t dataLen;
+    ble_gatt_chr_flags flags;
     uint16_t handle;
+public:
+    BleCharacteristic(uint16_t uuid, BleAccess access, uint8_t dataLen);
+
+    ble_gatt_chr_flags getFlags() const;
+
+    uint16_t getHandle() const;
+
+    uint16_t* getHandlePtr();
+
+    uint8_t* getDataPtr();
+
+    uint8_t getDataLen() const;
+
+    void setData(uint8_t* newData, uint8_t newDataLen);
+
+    virtual ~BleCharacteristic();
+};
+
+class BleService: public BleAttribute{
+private:
+    BleAttrType type;
+    ble_gatt_access_fn *accessCB;
+    ArrayList<BleCharacteristic*> characteristics{nullptr, 2};
+    ble_gatt_chr_def *characteristicsArray{nullptr};
+public:
+    BleService(uint16_t uuid, BleAttrType type, ble_gatt_access_fn *accessCB);
+    explicit BleService(uint16_t uuid, ble_gatt_access_fn *accessCB);
+    void addCharacteristic(uint16_t uuid, BleAccess access, uint8_t dataLen);
+    ble_gatt_chr_def* getCharacteristicsArray();
+    bool uuidIsExist(uint16_t uuid);
+    BleCharacteristic* getCharacteristic(uint16_t handle);
+    BleAttrType getType() const;
+
+    virtual ~BleService();
 };
 
 class BleServer: public ICommRW{
 private:
-    inline static ArrayList<BleAttribute*> attributes{nullptr};
+    inline static ArrayList<BleService*> services{nullptr, 1};
     const char* name;
 
-    inline static uint8_t count{0};
-    ble_uuid16_t primaryUUID{};
-    ble_gatt_chr_def *bleGatts{};
-    ble_gatt_svc_def gattSvcs[2]{};
+    ble_gatt_svc_def *gattSvcs{};
     inline static uint8_t own_addr_type{0};
     inline static uint8_t addr_val[6]{0};
 
@@ -41,15 +86,18 @@ private:
     static int gap_event_handler(struct ble_gap_event *event, void *arg);
     static void nimble_host_task(void *param);
     static void gatt_svr_subscribe_cb(struct ble_gap_event *event);
-    static int attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
+    static int attributeAccess(uint16_t entity, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
+    static bool checkCondition(std::function<bool(BleService*)> conditionLambda);
 public:
-    BleServer(const char* name);
+    explicit BleServer(const char* name);
 
     virtual ~BleServer();
 
     void start();
 
-    void addAttribute(const char* name,uint16_t uuid, BleAccess access, uint8_t dataLen);
+    void addService(BleAttrType type, uint16_t uuid);
+
+    void addCharacteristic(uint16_t serviceUUID, uint16_t characteristicUUID, BleAccess access, uint8_t dataLen);
 
     CommStatus read(uint8_t *bytes, uint16_t len) override;
 
