@@ -74,6 +74,7 @@ class BleServer: public ICommRW{
 private:
     inline static ArrayList<BleService*> services{nullptr, 1};
     const char* name;
+    bool startFlag{false};
 
     ble_gatt_svc_def *gattSvcs{};
     inline static uint8_t own_addr_type{0};
@@ -88,6 +89,7 @@ private:
     static void gatt_svr_subscribe_cb(struct ble_gap_event *event);
     static int attributeAccess(uint16_t entity, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
     static bool checkCondition(std::function<bool(BleService*)> conditionLambda);
+    static bool checkUUIDisExist(uint16_t uuid);
 public:
     explicit BleServer(const char* name);
 

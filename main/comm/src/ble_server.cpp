@@ -12,7 +12,7 @@
 #include "array_fun.h"
 
 
-#define TAG "ble_server"
+#define TAG "BLE_server"
 
 extern "C" void ble_store_config_init(void);
 
@@ -470,6 +470,11 @@ int BleServer::attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struc
 }
 
 void BleServer::start() {
+    if(startFlag){
+        ESP_LOGW(TAG, "BLE server already started, can't start again");
+        return;
+    }
+    startFlag = true;
     uint8_t index = 0;
     gattSvcs = new ble_gatt_svc_def[services.size() + 1];
     services.forEach([this, &index](BleService *service){
@@ -526,17 +531,20 @@ void BleServer::start() {
 }
 
 void BleServer::addService(BleAttrType type, uint16_t uuid) {
-    if(checkCondition([&uuid](BleService* service){
-        return service->getUUID() == uuid;
-    })){
-        ESP_LOGI(TAG, "Service with UUID %X already exist", uuid);
+    if(startFlag){
+        ESP_LOGW(TAG, "BLE server already started, can't add service");
         return;
     }
+    if(checkUUIDisExist(uuid)) return;
     auto service = new BleService(uuid, type, attributeAccess);
     services.add(service);
 }
 
 void BleServer::addCharacteristic(uint16_t serviceUUID, uint16_t characteristicUUID, BleAccess access, uint8_t dataLen) {
+    if(startFlag){
+        ESP_LOGW(TAG, "BLE server already started, can't add characteristic");
+        return;
+    }
     BleService* targetService{nullptr};
     if(!checkCondition([&serviceUUID, &targetService](BleService* service){
         if(service->getUUID() == serviceUUID){
@@ -545,15 +553,10 @@ void BleServer::addCharacteristic(uint16_t serviceUUID, uint16_t characteristicU
         }
         return false;
     })){
-        ESP_LOGI(TAG, "Service with UUID %X not exist", serviceUUID);
+        ESP_LOGW(TAG, "Service with UUID %X not exist", serviceUUID);
         return;
     }
-    if(checkCondition([&characteristicUUID](BleService* service){
-        return service->uuidIsExist(characteristicUUID);
-    })){
-        ESP_LOGI(TAG, "Service or characteristic with UUID %X already exist", characteristicUUID);
-        return;
-    }
+    if(checkUUIDisExist(characteristicUUID)) return;
     targetService->addCharacteristic(characteristicUUID, access, dataLen);
 }
 
@@ -566,4 +569,14 @@ bool BleServer::checkCondition(std::function<bool(BleService*)> conditionLambda)
         return matchFlag;
     });
     return matchFlag;
+}
+
+bool BleServer::checkUUIDisExist(uint16_t uuid) {
+    if(checkCondition([&uuid](BleService* service){
+        return service->uuidIsExist(uuid);
+    })){
+        ESP_LOGW(TAG, "Service or characteristic with UUID %X already exist", uuid);
+        return true;
+    }
+    return false;
 }
