@@ -20,12 +20,13 @@
 
 #include "wifi_ap_tcp_server.h"
 #include "ble_server.h"
+#include "common.h"
 
 
 //WiFiApTcpServer tcpServer("hiwifi", "12345678", 3333);
-//OnDelay onDelay(100);
-//OnDelay onDelay2(100000);
-//Coil coil(2);
+OnDelay onDelay(100);
+OnDelay onDelay2(1000);
+Coil coil(2);
 
 extern "C" void app_main(void) {
     BleServer bleServer("esp32ble");
@@ -38,10 +39,21 @@ extern "C" void app_main(void) {
     bleServer.start();
     uint8_t dataWrite[1] = {1};
     uint8_t dataRead[1] = {1};
-    while(1){
+    onDelay = true;
+    onDelay2 = true;
+    while(true){
+        if(onDelay.get()){
+            coil.toggle();
+            onDelay.again();
+        }
+        if(onDelay2.get()){
+            ESP_LOGI("OPA!", "Время пришло!");
+            onDelay2.again();
+        }
         bleServer.read(0xA000, 0xA001, dataRead, 1);
         dataWrite[0] = dataRead[0] + 1;
         bleServer.write(0xA000, 0xA001, dataWrite, 1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+        OsDelay(1);
     }
 }

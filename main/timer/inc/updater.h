@@ -25,10 +25,11 @@ class Updater{
 private:
     inline static auto updateList = new ArrayList<IUpdated1ms*>(nullptr);
     static void updaterTask(void *pvParameters);
+    static inline SemaphoreHandle_t updaterMutex = xSemaphoreCreateMutex();
+    static bool start();
+    static bool update();
 public:
     static void addObj(IUpdated1ms* obj);
-    static bool update();
-    static bool start();
 };
 
 

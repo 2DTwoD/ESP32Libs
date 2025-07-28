@@ -1,4 +1,6 @@
+#include <esp_log.h>
 #include "updater.h"
+#include "common.h"
 
 ////Deprecated
 //void Updater::initTimer() {
@@ -53,7 +55,11 @@ IUpdated1ms::IUpdated1ms() {
 }
 
 void Updater::addObj(IUpdated1ms *obj) {
-    updateList->add(obj);
+    if(xSemaphoreTake(updaterMutex, portMAX_DELAY) == pdTRUE){
+        if(updateList->isEmpty()) start();
+        updateList->add(obj);
+        xSemaphoreGive(updaterMutex);
+    }
 }
 
 bool Updater::update() {
@@ -65,14 +71,18 @@ bool Updater::update() {
 }
 
 bool Updater::start() {
+    ESP_LOGI("Updater", "Updater started!");
     return xTaskCreate(Updater::updaterTask, "updTask", 4 * 1024,
                        nullptr, 10, nullptr) == pdPASS;
 }
 
 void Updater::updaterTask(void *pvParameters) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    while(1){
-        Updater::update();
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_PERIOD_MS);
+    while(true){
+        if(xSemaphoreTake(updaterMutex, portMAX_DELAY) == pdTRUE){
+            Updater::update();
+            xSemaphoreGive(updaterMutex);
+        }
+        OsDelayUntil(&xLastWakeTime, 1);
     }
 }
