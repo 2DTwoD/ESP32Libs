@@ -16,6 +16,7 @@
 
 extern "C" void ble_store_config_init(void);
 
+SemaphoreHandle_t bleMutex{};
 
 //BleAttribute
 
@@ -64,17 +65,32 @@ uint16_t BleCharacteristic::getHandle() const {
     return handle;
 }
 
+
+void BleCharacteristic::getData(uint8_t *buffer, uint8_t len) {
+    if(xSemaphoreTake(bleMutex, portMAX_DELAY) == pdTRUE){
+        memcpy(buffer, data, len > dataLen? dataLen: len);
+        xSemaphoreGive(bleMutex);
+    } else {
+        ESP_LOGW(TAG, "Data was not read, mutex problem");
+    }
+}
+
+void BleCharacteristic::setData(uint8_t *newData, uint8_t newDataLen) {
+    if(xSemaphoreTake(bleMutex, portMAX_DELAY) == pdTRUE){
+        memset(data, 0, dataLen);
+        memcpy(data, newData, newDataLen > dataLen? dataLen: newDataLen);
+        xSemaphoreGive(bleMutex);
+    } else {
+        ESP_LOGW(TAG, "Data was not wrote, mutex problem");
+    }
+}
+
 uint8_t *BleCharacteristic::getDataPtr() {
     return data;
 }
 
 uint8_t BleCharacteristic::getDataLen() const {
     return dataLen;
-}
-
-void BleCharacteristic::setData(uint8_t *newData, uint8_t newDataLen) {
-    memset(data, 0, dataLen);
-    memcpy(data, newData, newDataLen > dataLen ? dataLen : newDataLen);
 }
 
 
@@ -86,17 +102,40 @@ BleService::BleService(uint16_t uuid, BleAttrType type, ble_gatt_access_fn *acce
 BleService::BleService(uint16_t uuid, ble_gatt_access_fn *accessCB):
         BleService(uuid, BLE_TYPE_PRIMARY, accessCB) {}
 
+BleService::~BleService() {
+    characteristics.forEach([](BleCharacteristic *characteristic){
+        delete characteristic;
+    });
+    delete[] characteristicsArray;
+}
 
 void BleService::addCharacteristic(uint16_t uuid, BleAccess access, uint8_t dataLen) {
     auto characteristic = new BleCharacteristic(uuid, access, dataLen);
     characteristics.add(characteristic);
 }
 
-BleService::~BleService() {
-    characteristics.forEach([](BleCharacteristic *characteristic){
-        delete characteristic;
+BleCharacteristic *BleService::getCharacteristicByCondition(std::function<bool(BleCharacteristic *)> conditionLambda) {
+    BleCharacteristic *targetCharacteristic{nullptr};
+    characteristics.forEachBreak([&targetCharacteristic, &conditionLambda](BleCharacteristic *characteristic){
+        if(conditionLambda(characteristic)){
+            targetCharacteristic = characteristic;
+            return true;
+        }
+        return false;
     });
-    delete[] characteristicsArray;
+    return targetCharacteristic;
+}
+
+BleCharacteristic *BleService::getCharacteristicByHandle(uint16_t handle) {
+    return getCharacteristicByCondition([&handle](BleCharacteristic *characteristic){
+        return characteristic->getHandle() == handle;
+    });
+}
+
+BleCharacteristic *BleService::getCharacteristicByUUID(uint16_t uuid) {
+    return getCharacteristicByCondition([&uuid](BleCharacteristic *characteristic){
+        return characteristic->getUUID() == uuid;
+    });;
 }
 
 ble_gatt_chr_def* BleService::getCharacteristicsArray() {
@@ -135,22 +174,17 @@ BleAttrType BleService::getType() const {
     return type;
 }
 
-BleCharacteristic *BleService::getCharacteristic(uint16_t handle) {
-    BleCharacteristic *targetCharacteristic{nullptr};
-    characteristics.forEachBreak([&handle, &targetCharacteristic](BleCharacteristic *characteristic){
-        if(characteristic->getHandle() == handle){
-            targetCharacteristic = characteristic;
-            return true;
-        }
-        return false;
-    });
-    return targetCharacteristic;
-}
-
 
 //BleServer
 
 BleServer::BleServer(const char* name): name(name){}
+
+BleServer::~BleServer() {
+    services.forEach([](BleService *service){
+        delete service;
+    });
+    delete[] gattSvcs;
+}
 
 void BleServer::on_stack_reset(int reason) {
     // On reset, print reset reason to console
@@ -426,27 +460,12 @@ void BleServer::gatt_svr_subscribe_cb(struct ble_gap_event *event)  {
     }
 }
 
-BleServer::~BleServer() {
-    services.forEach([](BleService *service){
-        delete service;
-    });
-    delete[] gattSvcs;
-}
-
-CommStatus BleServer::read(uint8_t *bytes, uint16_t len) {
-    return COMM_OK;
-}
-
-CommStatus BleServer::write(uint8_t *const bytes, uint16_t len) {
-    return COMM_OK;
-}
-
 
 int BleServer::attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
     switch (ctxt->op) {
         case BLE_GATT_ACCESS_OP_READ_CHR:
             services.forEachBreak([attr_handle, ctxt](BleService *service){
-                BleCharacteristic *characteristic = service->getCharacteristic(attr_handle);
+                BleCharacteristic *characteristic = service->getCharacteristicByHandle(attr_handle);
                 if(characteristic != nullptr){
                     os_mbuf_append(ctxt->om, characteristic->getDataPtr(), characteristic->getDataLen());
                     return true;
@@ -457,7 +476,7 @@ int BleServer::attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struc
         case BLE_GATT_ACCESS_OP_WRITE_CHR:
             ESP_LOGI(TAG, "device_write: Data from the client: %.*s", ctxt->om->om_len, ctxt->om->om_data);
             services.forEachBreak([attr_handle, ctxt](BleService *service){
-                BleCharacteristic *characteristic = service->getCharacteristic(attr_handle);
+                BleCharacteristic *characteristic = service->getCharacteristicByHandle(attr_handle);
                 if(characteristic != nullptr){
                     characteristic->setData(ctxt->om->om_data, ctxt->om->om_len);
                     return true;
@@ -469,11 +488,57 @@ int BleServer::attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struc
     return 0;
 }
 
+bool BleServer::checkCondition(std::function<bool(BleService*)> conditionLambda) {
+    bool matchFlag = false;
+    services.forEachBreak([&conditionLambda, &matchFlag](BleService *service){
+        if(conditionLambda(service)){
+            matchFlag = true;
+        }
+        return matchFlag;
+    });
+    return matchFlag;
+}
+
+bool BleServer::checkUUIDisExist(uint16_t uuid) {
+    if(checkCondition([&uuid](BleService* service){
+        return service->uuidIsExist(uuid);
+    })){
+        ESP_LOGW(TAG, "Service or characteristic with UUID %X already exist", uuid);
+        return true;
+    }
+    return false;
+}
+
+BleService *BleServer::getService(uint16_t uuid) {
+    BleService* targetService{nullptr};
+    if(!checkCondition([&uuid, &targetService](BleService* service){
+        if(service->getUUID() == uuid){
+            targetService = service;
+            return true;
+        }
+        return false;
+    })){
+        ESP_LOGW(TAG, "Service with UUID %X not exist", uuid);
+    }
+    return targetService;
+}
+
+BleCharacteristic *BleServer::getCharecteristic(uint16_t serviceUUID, uint16_t characteristicUUID) {
+    BleService* service = getService(serviceUUID);
+    if(service == nullptr) return nullptr;
+    BleCharacteristic* characteristic = service->getCharacteristicByUUID(characteristicUUID);
+    if(characteristic == nullptr){
+        ESP_LOGW(TAG, "Characteristic with UUID %X not exist", characteristicUUID);
+    }
+    return characteristic;
+}
+
 void BleServer::start() {
     if(startFlag){
         ESP_LOGW(TAG, "BLE server already started, can't start again");
         return;
     }
+    bleMutex = xSemaphoreCreateMutex();
     startFlag = true;
     uint8_t index = 0;
     gattSvcs = new ble_gatt_svc_def[services.size() + 1];
@@ -560,23 +625,16 @@ void BleServer::addCharacteristic(uint16_t serviceUUID, uint16_t characteristicU
     targetService->addCharacteristic(characteristicUUID, access, dataLen);
 }
 
-bool BleServer::checkCondition(std::function<bool(BleService*)> conditionLambda) {
-    bool matchFlag = false;
-    services.forEachBreak([&conditionLambda, &matchFlag](BleService *service){
-        if(conditionLambda(service)){
-            matchFlag = true;
-        }
-        return matchFlag;
-    });
-    return matchFlag;
+bool BleServer::read(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *bytes, uint16_t len) {
+    BleCharacteristic* characteristic = getCharecteristic(serviceUUID, characteristicUUID);
+    if(characteristic == nullptr) return false;
+    characteristic->getData(bytes, len);
+    return true;
 }
 
-bool BleServer::checkUUIDisExist(uint16_t uuid) {
-    if(checkCondition([&uuid](BleService* service){
-        return service->uuidIsExist(uuid);
-    })){
-        ESP_LOGW(TAG, "Service or characteristic with UUID %X already exist", uuid);
-        return true;
-    }
-    return false;
+bool BleServer::write(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *const bytes, uint16_t len) {
+    BleCharacteristic* characteristic = getCharecteristic(serviceUUID, characteristicUUID);
+    if(characteristic == nullptr) return false;
+    characteristic->setData(bytes, len);
+    return true;
 }
