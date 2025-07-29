@@ -460,7 +460,6 @@ void BleServer::gatt_svr_subscribe_cb(struct ble_gap_event *event)  {
     }
 }
 
-
 int BleServer::attributeAccess(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
     switch (ctxt->op) {
         case BLE_GATT_ACCESS_OP_READ_CHR:
