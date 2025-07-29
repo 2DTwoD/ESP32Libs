@@ -8,6 +8,9 @@
 
 #include "array_list.h"
 
+#define UPDATER_STACK_SIZE (1024)
+#define UPDATER_TASK_PRIORITY 10
+
 class IUpdated1ms {
 public:
     IUpdated1ms();
@@ -24,12 +27,18 @@ public:
 class Updater{
 private:
     inline static auto updateList = new ArrayList<IUpdated1ms*>(nullptr);
+
+    inline static SemaphoreHandle_t updaterMutex = xSemaphoreCreateMutex();
+
     static void updaterTask(void *pvParameters);
-    static inline SemaphoreHandle_t updaterMutex = xSemaphoreCreateMutex();
+
     static bool start();
-    static bool update();
+
+    static void update();
+
 public:
     static void addObj(IUpdated1ms* obj);
+
 };
 
 

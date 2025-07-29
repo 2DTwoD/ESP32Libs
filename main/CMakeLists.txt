@@ -9,7 +9,6 @@ idf_component_register(
         "analog/src/dac_output.cpp"
         "analog/src/pwm_output.cpp"
         "comm/src/i2c_driver.cpp"
-#        "comm/src/nimble_server.cpp"
         "comm/src/ble_server.cpp"
         "comm/src/wifi_ap_tcp_server.cpp"
         "control/src/pid.cpp"

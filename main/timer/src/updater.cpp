@@ -56,24 +56,27 @@ IUpdated1ms::IUpdated1ms() {
 
 void Updater::addObj(IUpdated1ms *obj) {
     if(xSemaphoreTake(updaterMutex, portMAX_DELAY) == pdTRUE){
-        if(updateList->isEmpty()) start();
+        if(updateList->isEmpty()){
+            if(!start()) {
+                ESP_LOGI("Updater", "Updater was not started! Task creation problem");
+                return;
+            }
+            ESP_LOGI("Updater", "Updater started!");
+        }
         updateList->add(obj);
         xSemaphoreGive(updaterMutex);
     }
 }
 
-bool Updater::update() {
-    if(Updater::updateList == nullptr) return false;
+void Updater::update() {
     Updater::updateList->forEach([](auto obj) {
         obj->update1ms();
     });
-    return true;
 }
 
 bool Updater::start() {
-    ESP_LOGI("Updater", "Updater started!");
-    return xTaskCreate(Updater::updaterTask, "updTask", 4 * 1024,
-                       nullptr, 10, nullptr) == pdPASS;
+    return xTaskCreate(Updater::updaterTask, "updTask", UPDATER_STACK_SIZE,
+                       nullptr, UPDATER_TASK_PRIORITY, nullptr) == pdPASS;
 }
 
 void Updater::updaterTask(void *pvParameters) {

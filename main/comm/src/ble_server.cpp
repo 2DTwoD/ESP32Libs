@@ -597,7 +597,7 @@ void BleServer::start() {
 
 void BleServer::addService(BleAttrType type, uint16_t uuid) {
     if(startFlag){
-        ESP_LOGW(TAG, "BLE server already started, can't add service");
+        ESP_LOGW(TAG, "Can't add service, BLE server already started");
         return;
     }
     if(checkUUIDisExist(uuid)) return;
@@ -607,7 +607,7 @@ void BleServer::addService(BleAttrType type, uint16_t uuid) {
 
 void BleServer::addCharacteristic(uint16_t serviceUUID, uint16_t characteristicUUID, BleAccess access, uint8_t dataLen) {
     if(startFlag){
-        ESP_LOGW(TAG, "BLE server already started, can't add characteristic");
+        ESP_LOGW(TAG, "Can't add characteristic, BLE server already started");
         return;
     }
     BleService* targetService{nullptr};
@@ -626,6 +626,10 @@ void BleServer::addCharacteristic(uint16_t serviceUUID, uint16_t characteristicU
 }
 
 bool BleServer::read(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *bytes, uint16_t len) {
+    if(!startFlag){
+        ESP_LOGW(TAG, "Can't read characteristic, the server is not running yet.");
+        return false;
+    }
     BleCharacteristic* characteristic = getCharecteristic(serviceUUID, characteristicUUID);
     if(characteristic == nullptr) return false;
     characteristic->getData(bytes, len);
@@ -633,6 +637,10 @@ bool BleServer::read(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t 
 }
 
 bool BleServer::write(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *const bytes, uint16_t len) {
+    if(!startFlag){
+        ESP_LOGW(TAG, "Can't write characteristic, the server is not running yet.");
+        return false;
+    }
     BleCharacteristic* characteristic = getCharecteristic(serviceUUID, characteristicUUID);
     if(characteristic == nullptr) return false;
     characteristic->setData(bytes, len);

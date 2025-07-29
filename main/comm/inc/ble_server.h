@@ -141,9 +141,9 @@ public:
 
     void addCharacteristic(uint16_t serviceUUID, uint16_t characteristicUUID, BleAccess access, uint8_t dataLen);
 
-    static bool read(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *bytes, uint16_t len);
+    bool read(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *bytes, uint16_t len);
 
-    static bool write(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *const bytes, uint16_t len);
+    bool write(uint16_t serviceUUID, uint16_t characteristicUUID, uint8_t *const bytes, uint16_t len);
 };
 
 #endif //BLE_SERVER_H
