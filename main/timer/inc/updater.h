@@ -26,7 +26,7 @@ public:
 
 class Updater{
 private:
-    inline static auto updateList = new ArrayList<IUpdated1ms*>(nullptr);
+    inline static auto updateList = new ArrayList<IUpdated1ms*>();
 
     inline static SemaphoreHandle_t updaterMutex = xSemaphoreCreateMutex();
 

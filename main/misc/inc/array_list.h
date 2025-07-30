@@ -12,7 +12,7 @@ private:
     uint8_t increase;
     uint16_t totalSize;
     uint16_t curIndex{0};
-    T zeroValue;
+    T zeroValue{};
     T* array{nullptr};
 
     void extend(){
@@ -34,19 +34,19 @@ public:
     using IList<T>::grab;
     using IList<T>::copyTo;
 
-    ArrayList(T zeroValue, uint8_t increaseStep): IList<T>(), zeroValue(zeroValue) {
+    ArrayList(uint8_t increaseStep): IList<T>() {
         increase = max((uint8_t )1, increaseStep);
         totalSize = increase;
         array = new T[totalSize];
     }
 
-    ArrayList(T zeroValue, const T* const src, uint16_t len, uint8_t increaseStep): ArrayList(zeroValue, increaseStep) {
+    ArrayList(const T* const src, uint16_t len, uint8_t increaseStep): ArrayList(increaseStep) {
         IList<T>::add(src, len);
     }
 
-    ArrayList(T zeroValue, const T* const src, uint16_t len): ArrayList(zeroValue, src, len, 10) {}
+    ArrayList(const T* const src, uint16_t len): ArrayList(src, len, 10) {}
 
-    explicit ArrayList(T zeroValue): ArrayList(zeroValue, 10){}
+    explicit ArrayList(): ArrayList(10){}
 
     uint16_t size() const override {
         return curIndex;

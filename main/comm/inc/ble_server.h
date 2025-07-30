@@ -67,7 +67,7 @@ private:
 
     ble_gatt_access_fn *accessCB;
 
-    ArrayList<BleCharacteristic*> characteristics{nullptr, 2};
+    ArrayList<BleCharacteristic*> characteristics{2};
 
     ble_gatt_chr_def *characteristicsArray{nullptr};
 
@@ -94,7 +94,7 @@ public:
 
 class BleServer{
 private:
-    inline static ArrayList<BleService*> services{nullptr, 1};
+    inline static ArrayList<BleService*> services{1};
 
     const char* name;
 

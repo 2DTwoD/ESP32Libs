@@ -39,7 +39,7 @@ private:
         return result;
     }
 public:
-    explicit StringMap(T zeroValue): zeroValue(zeroValue), smiList(nullptr) {}
+    explicit StringMap(T zeroValue): zeroValue(zeroValue), smiList() {}
 
     ~StringMap() {
         clear();

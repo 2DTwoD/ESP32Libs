@@ -17,16 +17,17 @@ OnDelay onDelay2(1000);
 Coil coil(2);
 
 extern "C" void app_main(void) {
-//    BleServer bleServer("esp32ble");
-//    bleServer.addService(BLE_TYPE_PRIMARY, 0xA000);
-//    bleServer.addCharacteristic(0xA000, 0xA001, BLE_RW, 10);
-//    bleServer.addCharacteristic(0xA000, 0xA002, BLE_RW, 15);
-//    bleServer.addService(BLE_TYPE_PRIMARY, 0xB000);
-//    bleServer.addCharacteristic(0xB000, 0xB001, BLE_RW, 10);
-//    bleServer.addCharacteristic(0xB000, 0xB002, BLE_RW, 5);
-//    bleServer.start();
-//    uint8_t dataWrite[1] = {1};
-//    uint8_t dataRead[1] = {1};
+    BleServer bleServer("esp32ble");
+    bleServer.addService(BLE_TYPE_PRIMARY, 0xA000);
+    bleServer.addCharacteristic(0xA000, 0xA001, BLE_RW, 10);
+    bleServer.addCharacteristic(0xA000, 0xA002, BLE_RW, 15);
+    bleServer.addService(BLE_TYPE_PRIMARY, 0xB000);
+    bleServer.addCharacteristic(0xB000, 0xB001, BLE_RW, 10);
+    bleServer.addCharacteristic(0xB000, 0xB002, BLE_RW, 5);
+    bleServer.start();
+    uint8_t dataWrite[1] = {1};
+    uint8_t dataRead[1] = {1};
+
     StringMap<uint8_t> map(0);
 
     onDelay = true;
@@ -61,9 +62,9 @@ extern "C" void app_main(void) {
                 count = 0;
             }
         }
-//        bleServer.read(0xA000, 0xA001, dataRead, 1);
-//        dataWrite[0] = dataRead[0] + 1;
-//        bleServer.write(0xA000, 0xA001, dataWrite, 1);
+        bleServer.read(0xA000, 0xA001, dataRead, 1);
+        dataWrite[0] = dataRead[0] + 1;
+        bleServer.write(0xA000, 0xA001, dataWrite, 1);
 
         OsDelay(1);
     }

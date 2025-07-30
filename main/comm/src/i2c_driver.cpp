@@ -12,7 +12,7 @@ I2CDriver::I2CDriver(i2c_port_num_t port, uint8_t sclPin, uint8_t sdaPin, int32_
         ESP_LOGI(errorTag, "I2CDriver constructor error");
     }
     this->timeout = timeout;
-    slaves = new ArrayList<i2c_master_dev_handle_t*>(nullptr);
+    slaves = new ArrayList<i2c_master_dev_handle_t*>();
 }
 
 CommStatus I2CDriver::init(I2CParams* commParams) {
