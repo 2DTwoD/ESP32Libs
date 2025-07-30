@@ -41,8 +41,11 @@ extern "C" void app_main(void) {
         if(onDelay2.get()){
             ESP_LOGI("OPA!", "Время пришло!");
             onDelay2.again();
-            memset(name, 0, 10);
 
+            if(map.isExist("opa4")){
+                ESP_LOGI("OPA!", "OPA4 существует!");
+            }
+            memset(name, 0, 10);
             if(count >= 5){
                 sprintf(name, "opa%d", 9 - count);
                 map.remove(name);

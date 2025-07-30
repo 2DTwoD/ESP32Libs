@@ -48,8 +48,7 @@ public:
     void add(const char *name, T value){
         auto smiPair = find(name);
         if(smiPair.stringMapIndex == nullptr){
-            auto smi = new StringMapIndex<T>{name, value};
-            smiList.add(smi);
+            smiList.add(new StringMapIndex<T>{name, value});
         }
     }
 
@@ -84,8 +83,7 @@ public:
     }
 
     bool isExist(const char *name){
-        auto smiPair = find(name);
-        return smiPair.stringMapIndex != nullptr;
+        return find(name).stringMapIndex != nullptr;
     }
 
     uint16_t size(){
