@@ -121,9 +121,23 @@ public:
         }
     }
 
+    void forEach(std::function<void(T, uint16_t)> lambda) const{
+        for(uint16_t i = 0; i < size(); i++){
+            lambda(array[i], i);
+        }
+    }
+
     void forEachBreak(std::function<bool(T)> lambda) const{
         for(uint16_t i = 0; i < size(); i++){
             if(lambda(array[i])){
+                break;
+            }
+        }
+    }
+
+    void forEachBreak(std::function<bool(T, uint16_t)> lambda) const{
+        for(uint16_t i = 0; i < size(); i++){
+            if(lambda(array[i], i)){
                 break;
             }
         }

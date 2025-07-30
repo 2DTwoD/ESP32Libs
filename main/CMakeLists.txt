@@ -23,6 +23,7 @@ idf_component_register(
         "discrete/src/simple_input_delayed.cpp"
         "misc/src/array_fun.cpp"
         "misc/src/math_fun.cpp"
+        "misc/src/result.cpp"
         "observe/src/counter.cpp"
         "observe/src/monitor.cpp"
         "observe/src/moving_avg.cpp"
