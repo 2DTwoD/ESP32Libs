@@ -7,6 +7,41 @@
 #include "i_list.h"
 
 template<typename T>
+struct ArrayListIterator{
+private:
+    T* m_ptr;
+public:
+    ArrayListIterator(T* ptr) : m_ptr(ptr) {}
+
+    T& operator*() const{
+        return *m_ptr;
+    }
+
+    T* operator->(){
+        return m_ptr;
+    }
+
+    ArrayListIterator& operator++(){
+        m_ptr++;
+        return *this;
+    }
+
+    ArrayListIterator operator++(int){
+        ArrayListIterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    friend bool operator==(const ArrayListIterator& a, const ArrayListIterator& b){
+        return a.m_ptr == b.m_ptr;
+    };
+
+    friend bool operator!=(const ArrayListIterator& a, const ArrayListIterator& b){
+        return a.m_ptr != b.m_ptr;
+    };
+};
+
+template<typename T>
 class ArrayList: public IList<T>{
 private:
     uint8_t increase;
@@ -34,7 +69,7 @@ public:
     using IList<T>::grab;
     using IList<T>::copyTo;
 
-    ArrayList(uint8_t increaseStep): IList<T>() {
+    explicit ArrayList(uint8_t increaseStep): IList<T>() {
         increase = max((uint8_t )1, increaseStep);
         totalSize = increase;
         array = new T[totalSize];
@@ -46,7 +81,7 @@ public:
 
     ArrayList(const T* const src, uint16_t len): ArrayList(src, len, 10) {}
 
-    explicit ArrayList(): ArrayList(10){}
+    ArrayList(): ArrayList(10){}
 
     uint16_t size() const override {
         return curIndex;
@@ -147,6 +182,14 @@ public:
         for(uint16_t i = 0; i < size(); i++){
             array[i] = lambda(array[i]);
         }
+    }
+
+    ArrayListIterator<T> begin(){
+        return ArrayListIterator(&array[0]);
+    }
+
+    ArrayListIterator<T> end() {
+        return ArrayListIterator(&array[size()]);
     }
 };
 

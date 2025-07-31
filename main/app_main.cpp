@@ -29,6 +29,15 @@ extern "C" void app_main(void) {
     uint8_t dataRead[1] = {1};
 
     StringMap<uint8_t> map(0);
+    ArrayList<uint8_t> list(5);
+    list.add(1);
+    list.add(2);
+    list.add(3);
+    list.add(4);
+    list.add(5);
+    for (auto i : list){
+        ESP_LOGI("list", "value: %d", i);
+    }
 
     onDelay = true;
     onDelay2 = true;
