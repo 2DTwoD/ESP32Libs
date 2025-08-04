@@ -16,6 +16,9 @@
 #include "lwip/sys.h"
 #include "array_fun.h"
 
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT      BIT1
+
 struct IPv4addr{
     uint8_t oct1{0};
     uint8_t oct2{0};
@@ -23,20 +26,34 @@ struct IPv4addr{
     uint8_t oct4{0};
 };
 
-class WiFiApTcpServer{
+enum WiFiType{
+    WIFI_AP_TYPE = 0,
+    WIFI_STA_TYPE = 1
+};
+
+class WiFiTcpServer{
 private:
+    WiFiType type{};
     char *ssid{};
     char *password{};
     uint16_t port;
     IPv4addr apAddress{};
     IPv4addr apMask{};
     uint8_t maxConnections{10};
-    inline static const char *TAG = "WiFiApTcpServer";
-    static void wifiEventhandler(void* arg, esp_event_base_t event_base,
-                                   int32_t event_id, void* event_data);
+    bool started{false};
+
+    static inline const char *TAG = "WiFiApTcpServer";
+    static inline EventGroupHandle_t s_wifi_event_group = xEventGroupCreate();
+    static inline uint8_t staRetryNum = 0;
+    static inline uint8_t maxStaRetryNum = 5;
+
     static void tcpServerTask(void *pvParameters);
+    static void wifiEventHandler(void* arg, esp_event_base_t event_base,
+                                 int32_t event_id, void* event_data);
+    void startAP();
+    void startSTA();
 public:
-    WiFiApTcpServer(const char* ssid, const char* password, uint16_t port,
+    WiFiTcpServer(WiFiType type, const char* ssid, const char* password, uint16_t port,
                     IPv4addr apAddress = {192, 168, 10, 10},
                     IPv4addr apMask = {255, 255, 255, 0},
                     uint8_t maxConnections = 10);
@@ -48,7 +65,7 @@ public:
 
 struct WiFiApTcpServerTaskParams{
     uint16_t port{0};
-    WiFiApTcpServer* wiFiApTcpServer{nullptr};
+    WiFiTcpServer* wiFiApTcpServer{nullptr};
 };
 
 #endif //WIFI_AP_TCP_SERVER_H

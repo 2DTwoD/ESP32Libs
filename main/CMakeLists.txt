@@ -11,7 +11,7 @@ idf_component_register(
         "comm/src/ble_server.cpp"
         "comm/src/buffer.cpp"
         "comm/src/i2c_driver.cpp"
-        "comm/src/wifi_ap_tcp_server.cpp"
+        "comm/src/wifi_tcp_server.cpp"
         "control/src/pid.cpp"
         "control/src/ramp.cpp"
         "control/src/sequence.cpp"
