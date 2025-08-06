@@ -19,7 +19,7 @@ extern "C" void app_main(void) {
     onDelay2 = true;
     Buffer buffer(10);
 //    uint8_t count = 0;
-    WiFiTcpServer wifiServer(WIFI_STA_TYPE, "virRout", "12345678", 3333);
+    WiFiTcpServer wifiServer(WIFI_AP_TYPE, "virRout", "12345678", 3333);
     wifiServer.start();
     while(true){
         if(onDelay.get()){
