@@ -1,5 +1,5 @@
-#ifndef WIFI_AP_TCP_SERVER_H
-#define WIFI_AP_TCP_SERVER_H
+#ifndef WIFI_TCP_SERVER_H
+#define WIFI_TCP_SERVER_H
 
 #include <cstdint>
 #include <cstring>
@@ -57,8 +57,9 @@ private:
     static void getAddress(IPv4addr& dst, uint32_t src);
     void startAP(bool staFail);
     void startSTA();
-    void sendData(int client_socket, uint8_t *sendingData, uint16_t len);
     virtual void afterReceiveAction(int client_socket, uint8_t *receivedData, uint16_t len);
+protected:
+    void sendData(int client_socket, uint8_t *sendingData, uint16_t len);
 public:
     WiFiTcpServer(WiFiType type, const char* ssid, const char* password, uint16_t port,
                   uint8_t maxConnections = 3,
@@ -74,7 +75,6 @@ public:
     IPv4addr getSTAmask();
     void printAPipMask() const;
     void printSTAipMask() const;
-
 };
 
 
@@ -83,4 +83,4 @@ struct WiFiTcpServerTaskParams{
     WiFiTcpServer* server{nullptr};
 };
 
-#endif //WIFI_AP_TCP_SERVER_H
+#endif //WIFI_TCP_SERVER_H
